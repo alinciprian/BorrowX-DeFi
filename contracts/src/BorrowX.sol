@@ -23,7 +23,8 @@ contract BorrowX is ReentrancyGuard {
     error BorrowX__AmountExceedsBalance();
     error BorrowX__NeedsMoreThanZero();
     error BorrowX__MintFailed();
-    error BorrowX__MintAmountExceedsLoanToValue();
+    error BorrowX__ExceedsLoanToValue();
+    error BorrowX__MustPayDebtFirst();
 
     //////////////////////
     ///Types
@@ -37,6 +38,7 @@ contract BorrowX is ReentrancyGuard {
 
     uint256 private constant LOAN_TO_VALUE = 50; // 1:2 -> Loan:Value ratio
     uint256 private constant LOAN_LIQUIDATION_DISCOUNT = 10; // 10% discount incentive
+    uint256 private constant LOAN_LIQUIDATION_THRESHOLD = 75;
     uint256 private constant LOAN_PRECISION = 100;
 
     uint256 private constant PRECISION = 1e18;
@@ -70,7 +72,7 @@ contract BorrowX is ReentrancyGuard {
     ///Functions
     //////////////////////
 
-    /// @param _collateralTokenAddress - the address of the token that will be used as collateral(wETH)
+    /// @param _collateralTokenAddress - the address of the token that will be used as collateral
     /// @param _priceFeedAddress - the priceFeed address of the token used as collateral
     /// @param _xUSDCAddress - the address of the xUSDC contract
     constructor(address _collateralTokenAddress, address _priceFeedAddress, address _xUSDCAddress) {
@@ -90,31 +92,89 @@ contract BorrowX is ReentrancyGuard {
         }
     }
 
-    function mintxUSDC(uint256 _amount) public moreThanZero(_amount) {
-        _checkLoanToValue(msg.sender, _amount);
-        xusdcMinted[msg.sender] += _amount;
-        bool minted = i_xusdc.mint(msg.sender, _amount);
+    /// This function allows users to mint xUSDC
+    /// First we check if the desired amount to be minted is allowed by the protocol; then we update the database and mint
+    /// CEI pattern being used to avoid reentrancy
+    function mintxUSDC(uint256 _amountToMint) public moreThanZero(_amountToMint) {
+        _checkLoanToValue(msg.sender, _amountToMint, 0);
+        xusdcMinted[msg.sender] += _amountToMint;
+        bool minted = i_xusdc.mint(msg.sender, _amountToMint);
         if (!minted) {
             revert BorrowX__MintFailed();
         }
     }
 
-    function _checkLoanToValue(address _user, uint256 _amount) internal view {
-        uint256 userCollateralAmount = collateralDeposited[_user];
+    function withdrawCollateral(uint256 _amountToWithdraw) public moreThanZero(_amountToWithdraw) {
+        // we check if the desired operation breaks Loan-To-Value
+        _checkLoanToValue(msg.sender, 0, _amountToWithdraw);
+
+        collateralDeposited[msg.sender] -= _amountToWithdraw;
+    }
+
+    /// Users can use this function in order to burn their xUSDC. Might want to do this if you are getting too close to liquidation threshold
+    function burnxUSDC(uint256 _amountToBurn) public moreThanZero(_amountToBurn) {
+        _burnDsc(_amountToBurn, msg.sender, msg.sender);
+    }
+
+    /// This function allows user to deposit collateral and automatically mint the maximum allowed amount of xUSDC
+    function depositAndMintMax(uint256 _amountToDeposit) public moreThanZero(_amountToDeposit) {
+        depositCollateral(_amountToDeposit);
+        uint256 maxMint = mintAmountAllowed(msg.sender);
+        mintxUSDC(maxMint);
+    }
+
+    /// Function allows user to pay the debt and get collateral back;
+    /// @dev it can only be called once all the debt is paid
+    function closePosition() public {
+        // step 1 user burns the entire debt
+        burnxUSDC(xusdcMinted[msg.sender]);
+
+        // step 2 we double check that the debt is indeed paid
+        if (xusdcMinted[msg.sender] > 0) revert BorrowX__MustPayDebtFirst();
+
+        // step 3 update storage
+        uint256 amountToSend = collateralDeposited[msg.sender];
+        collateralDeposited[msg.sender] = 0;
+
+        // step 4 execute transfer of funds
+        bool success = IERC20(collateralTokenAddress).transfer(msg.sender, amountToSend);
+        if (!success) revert BorrowX__TransferFailed();
+    }
+
+    /// This function is used to compute the maximum amount of xUSDC a user can mint. Takes into account the collateral value and the amount already minted;
+    function mintAmountAllowed(address _user) public view returns (uint256) {
+        uint256 usdCollateralValue = _getUsdValueFromToken(collateralDeposited[_user]);
+        uint256 maxUSDCLoanToValue = (usdCollateralValue * LOAN_TO_VALUE) / LOAN_PRECISION;
+        uint256 currentlyMinted = xusdcMinted[_user];
+        return (maxUSDCLoanToValue - currentlyMinted);
+    }
+
+    /// @dev This functions checks if the minting or withdraw operation will will break Loan-to-value threshold;
+    /// Function must revert if 1:2 ratio is exceeded;
+    /// @param _amountToMint Will be zero if user just tries to withdraw;
+    /// @param _amountToWithdraw Will be zero if user just tries to mint;
+    function _checkLoanToValue(address _user, uint256 _amountToMint, uint256 _amountToWithdraw) internal view {
+        uint256 userCollateralAmount = collateralDeposited[_user] - _amountToWithdraw;
         uint256 usdValueOfCollateral = _getUsdValueFromToken(userCollateralAmount);
-        uint256 totalMintedAfter = xusdcMinted[_user] + _amount;
+        uint256 totalMintedAfter = xusdcMinted[_user] + _amountToMint;
         if ((usdValueOfCollateral * LOAN_TO_VALUE) / LOAN_PRECISION <= totalMintedAfter) {
-            revert BorrowX__MintAmountExceedsLoanToValue();
+            revert BorrowX__ExceedsLoanToValue();
         }
-        //this function should get the USD value of the collateral and compare it to the amount of xUSDC minted by the user
-        //In order to do this, we need to use chainlink priceFeeds.
+    }
+
+    /// The core function that handles xUSDC burning
+    function _burnDsc(uint256 _amountToBurn, address _beneficiary, address _xUSDCfrom) private {
+        xusdcMinted[_beneficiary] -= _amountToBurn;
+        bool success = i_xusdc.transferFrom(_xUSDCfrom, address(this), _amountToBurn);
+        if (!success) revert BorrowX__TransferFailed();
+        i_xusdc.burn(_amountToBurn);
     }
 
     /// The function is meant to compute the USD value of the collateral
-    function _getUsdValueFromToken(uint256 _amount) private view returns (uint256) {
+    function _getUsdValueFromToken(uint256 _amount) internal view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedCollateralTokenAddress);
         (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
         /// The price is returned with 8 decimals so we will multiple by 1e10 for additional precision.
-        return ((uint256(price) * 1e10) * _amount) / PRECISION;
+        return ((uint256(price) * ADDITIONAL_FEED_PRECISION) * _amount) / PRECISION;
     }
 }
