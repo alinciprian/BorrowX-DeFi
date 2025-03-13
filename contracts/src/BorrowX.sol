@@ -108,7 +108,12 @@ contract BorrowX is ReentrancyGuard {
         // we check if the desired operation breaks Loan-To-Value
         _checkLoanToValue(msg.sender, 0, _amountToWithdraw);
 
+        // update storage
         collateralDeposited[msg.sender] -= _amountToWithdraw;
+
+        // execute transfer
+        bool success = IERC20(collateralTokenAddress).transfer(msg.sender, _amountToWithdraw);
+        if (!success) revert BorrowX__TransferFailed();
     }
 
     /// Users can use this function in order to burn their xUSDC. Might want to do this if you are getting too close to liquidation threshold
