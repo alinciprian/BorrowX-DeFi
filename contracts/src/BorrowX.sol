@@ -26,6 +26,8 @@ contract BorrowX is ReentrancyGuard {
     error BorrowX__ExceedsLoanToValue();
     error BorrowX__MustPayDebtFirst();
     error BorrowX__InsuficientBalance();
+    error BorrowX__UserHasSufficientCollateral();
+    error BorrowX__DebtWasNotPaid();
 
     //////////////////////
     ///Types
@@ -39,7 +41,8 @@ contract BorrowX is ReentrancyGuard {
 
     uint256 private constant LOAN_TO_VALUE = 50; // 1:2 -> Loan:Value ratio
     uint256 private constant LOAN_LIQUIDATION_DISCOUNT = 10; // 10% discount incentive
-    uint256 private constant LOAN_LIQUIDATION_THRESHOLD = 75;
+    // if xUSDC minted reaches 80% of the collateral deposited, the position is open of liquidation;
+    uint256 private constant LOAN_LIQUIDATION_THRESHOLD = 80;
     uint256 private constant LOAN_PRECISION = 100;
 
     uint256 private constant PRECISION = 1e18;
@@ -121,8 +124,46 @@ contract BorrowX is ReentrancyGuard {
         if (!success) revert BorrowX__TransferFailed();
     }
 
+    /// @notice This function allows users to liquidate positions that become too undercolllateralized;
+    /// @notice As incentive for liquidation, the liquidator gets a 10% discount on the collateral;
+    function liquidate(address _userForLiquidation) public {
+        // we check if user is eligible to be liquidated;
+        bool eligibleForLiquidation = _isEligibleForLiquidation(_userForLiquidation);
+        if (eligibleForLiquidation) revert BorrowX__UserHasSufficientCollateral();
+
+        //xUSDC amount to be paid by the liquidator;
+        uint256 debtToBePaid = xusdcMinted[_userForLiquidation];
+        // token amount of the xUSDC debt;
+        uint256 tokenAmountOfDebt = _getTokenValueFromUsd(debtToBePaid);
+        // we calculate the 10% bonus for the liquidator;
+        uint256 tokenLiquidationBonus = (tokenAmountOfDebt * LOAN_LIQUIDATION_DISCOUNT) / LOAN_PRECISION;
+        uint256 tokenAmountToBeSent = tokenAmountOfDebt + tokenLiquidationBonus;
+
+        //step 1 -> the liquidator burns the amount of xUSDC owned by the user ;
+        _burnxUSDC(debtToBePaid, _userForLiquidation, msg.sender);
+        //step 2 -> the liquidator gets the equivalent token collateral + 10%;
+        bool success = IERC20(collateralTokenAddress).transfer(msg.sender, tokenAmountToBeSent);
+        if (!success) revert BorrowX__TransferFailed();
+        // check if indeed user debt was paid;
+        if (xusdcMinted[_userForLiquidation] > 0) revert BorrowX__DebtWasNotPaid();
+    }
+
+    /// @notice This functions checks if a position exceeds the liquidation threshold;
+    function _isEligibleForLiquidation(address _user) internal view returns (bool) {
+        if (xusdcMinted[_user] == 0) return false;
+        // How much collateral is deposited by the user
+        uint256 userCollateralAmount = collateralDeposited[_user];
+        // The usd value of the collateral deposited
+        uint256 usdCollateralValue = _getUsdValueFromToken(userCollateralAmount);
+        // The amount of xUSDC minted
+        uint256 xUSDCDebt = xusdcMinted[_user];
+        // we check if the debt reaches 80% of the usd collateral value
+        return bool(usdCollateralValue * LOAN_LIQUIDATION_THRESHOLD < xUSDCDebt * LOAN_PRECISION);
+    }
+
     /// @notice Users can use this function in order to burn their xUSDC.
-    /// @notice Might want to use this if you are getting too close to liquidation threshold
+    /// @notice Might want to use this if you are getting too close to liquidation threshold;
+    /// @notice Used by a user to burn xUSDC on his own behalf
     function burnxUSDC(uint256 _amountToBurn) public moreThanZero(_amountToBurn) {
         _burnxUSDC(_amountToBurn, msg.sender, msg.sender);
     }
