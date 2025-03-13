@@ -6,7 +6,7 @@ import {Ownable} from "../lib/openzeppelin-contracts/contracts/access/Ownable.so
 
 /// @title Stable Coin X
 /// @author AlinCiprian
-/// Collateral: wETH and wBTC
+/// Collateral: wETH
 /// Pegged to USD
 /// This contract is meant to be an ERC20 stablecoin that can be borrowed from BorrowX contract in exchange for locking an appropriate amount
 /// of colateral
