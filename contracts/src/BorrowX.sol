@@ -124,7 +124,7 @@ contract BorrowX is ReentrancyGuard {
     /// @notice Users can use this function in order to burn their xUSDC.
     /// @notice Might want to use this if you are getting too close to liquidation threshold
     function burnxUSDC(uint256 _amountToBurn) public moreThanZero(_amountToBurn) {
-        _burnDsc(_amountToBurn, msg.sender, msg.sender);
+        _burnxUSDC(_amountToBurn, msg.sender, msg.sender);
     }
 
     /// @notice This function allows user to deposit collateral and automatically mint the maximum allowed amount of xUSDC
@@ -143,13 +143,9 @@ contract BorrowX is ReentrancyGuard {
         // step 2 we double check that the debt is indeed paid
         if (xusdcMinted[msg.sender] > 0) revert BorrowX__MustPayDebtFirst();
 
-        // step 3 update storage
+        // step 3 execute the transfer of funds
         uint256 amountToSend = collateralDeposited[msg.sender];
-        collateralDeposited[msg.sender] = 0;
-
-        // step 4 execute transfer of funds
-        bool success = IERC20(collateralTokenAddress).transfer(msg.sender, amountToSend);
-        if (!success) revert BorrowX__TransferFailed();
+        withdrawCollateral(amountToSend);
     }
 
     /// @notice This function is used to compute the maximum amount of xUSDC a user can mint.
@@ -176,22 +172,23 @@ contract BorrowX is ReentrancyGuard {
         return tokenAmountToWithdraw;
     }
 
-    /// @dev This functions checks if the minting or withdraw operation will will break Loan-to-value threshold;
+    /// @dev This functions checks if the minting or withdraw operation will  break Loan-to-value threshold;
     /// Function must revert if 1:2 ratio is exceeded;
     /// @param _amountToMint Will be zero if user just tries to withdraw;
     /// @param _amountToWithdraw Will be zero if user just tries to mint;
     function _checkLoanToValue(address _user, uint256 _amountToMint, uint256 _amountToWithdraw) internal view {
+        if (xusdcMinted[_user] == 0) return; // early return in case use has no debt
         if (_amountToWithdraw > collateralDeposited[_user]) revert BorrowX__InsuficientBalance();
         uint256 userCollateralAmount = collateralDeposited[_user] - _amountToWithdraw;
         uint256 usdValueOfCollateral = _getUsdValueFromToken(userCollateralAmount);
         uint256 totalMintedAfter = xusdcMinted[_user] + _amountToMint;
-        if ((usdValueOfCollateral * LOAN_TO_VALUE) < totalMintedAfter * LOAN_PRECISION) {
+        if ((usdValueOfCollateral * LOAN_TO_VALUE) < (totalMintedAfter * LOAN_PRECISION)) {
             revert BorrowX__ExceedsLoanToValue();
         }
     }
 
     /// @notice The core function that handles xUSDC burning
-    function _burnDsc(uint256 _amountToBurn, address _beneficiary, address _xUSDCfrom) private {
+    function _burnxUSDC(uint256 _amountToBurn, address _beneficiary, address _xUSDCfrom) private {
         xusdcMinted[_beneficiary] -= _amountToBurn;
         bool success = i_xusdc.transferFrom(_xUSDCfrom, address(this), _amountToBurn);
         if (!success) revert BorrowX__TransferFailed();
