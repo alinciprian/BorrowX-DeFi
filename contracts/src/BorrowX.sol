@@ -274,8 +274,21 @@ contract BorrowX is ReentrancyGuard {
         return mintAmountAllowed;
     }
 
-    function withdrawAmountAllowed(address _user) public view returns (uint256) {
+    function getWithdrawAmountAllowed(address _user) public view returns (uint256) {
         uint256 withdrawAmountAllowed = _withdrawAmountAllowed(_user);
         return withdrawAmountAllowed;
+    }
+
+    function getUserCollateralDeposited(address _user) public view returns (uint256) {
+        return collateralDeposited[_user];
+    }
+
+    function getUserMintedXUSDC(address _user) public view returns (uint256) {
+        return xusdcMinted[_user];
+    }
+
+    function getLiquidationStatus(address _user) public view returns (bool) {
+        bool liquidationStatus = _isEligibleForLiquidation(_user);
+        return liquidationStatus;
     }
 }
