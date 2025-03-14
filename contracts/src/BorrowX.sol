@@ -35,7 +35,7 @@ contract BorrowX is ReentrancyGuard {
     using OracleLib for AggregatorV3Interface;
 
     //////////////////////
-    ///Types
+    ///State variables
     //////////////////////
     xUSDC private immutable i_xusdc;
 
