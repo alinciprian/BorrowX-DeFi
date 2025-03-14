@@ -86,6 +86,10 @@ contract BorrowX is ReentrancyGuard {
         i_xusdc = xUSDC(_xUSDCAddress);
     }
 
+    //////////////////////
+    ///Public functions
+    //////////////////////
+
     /// @notice This function allows user to deposit collateral
     /// @param _amountToDeposit - The amount of collateral to be deposited
     function depositCollateral(uint256 _amountToDeposit) public moreThanZero(_amountToDeposit) {
@@ -148,17 +152,11 @@ contract BorrowX is ReentrancyGuard {
         if (xusdcMinted[_userForLiquidation] > 0) revert BorrowX__DebtWasNotPaid();
     }
 
-    /// @notice This functions checks if a position exceeds the liquidation threshold;
-    function _isEligibleForLiquidation(address _user) internal view returns (bool) {
-        if (xusdcMinted[_user] == 0) return false;
-        // How much collateral is deposited by the user
-        uint256 userCollateralAmount = collateralDeposited[_user];
-        // The usd value of the collateral deposited
-        uint256 usdCollateralValue = _getUsdValueFromToken(userCollateralAmount);
-        // The amount of xUSDC minted
-        uint256 xUSDCDebt = xusdcMinted[_user];
-        // we check if the debt reaches 80% of the usd collateral value
-        return bool(usdCollateralValue * LOAN_LIQUIDATION_THRESHOLD < xUSDCDebt * LOAN_PRECISION);
+    /// @notice This function allows user to deposit collateral and automatically mint the maximum  amount of xUSDC
+    function depositAndMintMax(uint256 _amountToDeposit) public moreThanZero(_amountToDeposit) {
+        depositCollateral(_amountToDeposit);
+        uint256 maxMint = mintAmountAllowed(msg.sender);
+        mintxUSDC(maxMint);
     }
 
     /// @notice Users can use this function in order to burn their xUSDC.
@@ -166,13 +164,6 @@ contract BorrowX is ReentrancyGuard {
     /// @notice Used by a user to burn xUSDC on his own behalf
     function burnxUSDC(uint256 _amountToBurn) public moreThanZero(_amountToBurn) {
         _burnxUSDC(_amountToBurn, msg.sender, msg.sender);
-    }
-
-    /// @notice This function allows user to deposit collateral and automatically mint the maximum allowed amount of xUSDC
-    function depositAndMintMax(uint256 _amountToDeposit) public moreThanZero(_amountToDeposit) {
-        depositCollateral(_amountToDeposit);
-        uint256 maxMint = mintAmountAllowed(msg.sender);
-        mintxUSDC(maxMint);
     }
 
     /// @notice Function allows user to pay the debt and get collateral back;
@@ -189,28 +180,33 @@ contract BorrowX is ReentrancyGuard {
         withdrawCollateral(amountToSend);
     }
 
-    /// @notice This function is used to compute the maximum amount of xUSDC a user can mint.
-    /// @notice Takes into account the collateral value and the amount already minted;
-    function mintAmountAllowed(address _user) public view returns (uint256) {
-        uint256 usdCollateralValue = _getUsdValueFromToken(collateralDeposited[_user]);
-        uint256 maxUSDCLoanToValue = (usdCollateralValue * LOAN_TO_VALUE) / LOAN_PRECISION;
-        uint256 currentlyMinted = xusdcMinted[_user];
-        return (maxUSDCLoanToValue - currentlyMinted);
+    //////////////////////
+    ///Internal functions
+    //////////////////////
+
+    /// @notice The core function that handles xUSDC burning
+    function _burnxUSDC(uint256 _amountToBurn, address _beneficiary, address _xUSDCfrom) internal {
+        xusdcMinted[_beneficiary] -= _amountToBurn;
+        bool success = i_xusdc.transferFrom(_xUSDCfrom, address(this), _amountToBurn);
+        if (!success) revert BorrowX__TransferFailed();
+        i_xusdc.burn(_amountToBurn);
     }
 
-    /// @notice This function is used to compute the maximum amount of collateral a user can withdraw from his position.abi
-    function withdrawAmountAllowed(address _user) public view returns (uint256) {
-        // The USD value of the collateral;
-        uint256 usdCollateralValue = _getUsdValueFromToken(collateralDeposited[_user]);
-        // The amount of USDC minted;
-        uint256 currentlyMinted = xusdcMinted[_user];
-        // The amount USD value of the collateral that the user can withdraw without breaking Loan-To-Value;
-        // If usdAmountToWithdraw = 0 means no collateral can be withdrawn;
-        // collateral value in USD divided by 2, minus currently minted amount;
-        uint256 usdAmountToWithdraw = (usdCollateralValue * LOAN_TO_VALUE / LOAN_PRECISION) - currentlyMinted;
-        // the USD value amount is now converted to token amount
-        uint256 tokenAmountToWithdraw = _getTokenValueFromUsd(usdAmountToWithdraw);
-        return tokenAmountToWithdraw;
+    //////////////////////
+    ///Internal view
+    //////////////////////
+
+    /// @notice This functions checks if a position exceeds the liquidation threshold;
+    function _isEligibleForLiquidation(address _user) internal view returns (bool) {
+        if (xusdcMinted[_user] == 0) return false;
+        // How much collateral is deposited by the user
+        uint256 userCollateralAmount = collateralDeposited[_user];
+        // The usd value of the collateral deposited
+        uint256 usdCollateralValue = _getUsdValueFromToken(userCollateralAmount);
+        // The amount of xUSDC minted
+        uint256 xUSDCDebt = xusdcMinted[_user];
+        // we check if the debt reaches 80% of the usd collateral value
+        return bool(usdCollateralValue * LOAN_LIQUIDATION_THRESHOLD < xUSDCDebt * LOAN_PRECISION);
     }
 
     /// @dev This functions checks if the minting or withdraw operation will  break Loan-to-value threshold;
@@ -228,14 +224,6 @@ contract BorrowX is ReentrancyGuard {
         }
     }
 
-    /// @notice The core function that handles xUSDC burning
-    function _burnxUSDC(uint256 _amountToBurn, address _beneficiary, address _xUSDCfrom) private {
-        xusdcMinted[_beneficiary] -= _amountToBurn;
-        bool success = i_xusdc.transferFrom(_xUSDCfrom, address(this), _amountToBurn);
-        if (!success) revert BorrowX__TransferFailed();
-        i_xusdc.burn(_amountToBurn);
-    }
-
     /// @notice This function is meant to compute the USD value of the collateral
     function _getUsdValueFromToken(uint256 _amount) internal view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedCollateralTokenAddress);
@@ -249,5 +237,31 @@ contract BorrowX is ReentrancyGuard {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedCollateralTokenAddress);
         (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
         return ((_amount * PRECISION) / (uint256(price) / ADDITIONAL_FEED_PRECISION));
+    }
+
+    //////////////////////
+    ///Public view
+    //////////////////////
+
+    /// @notice This function is used to compute the maximum amount of xUSDC a user can mint.
+    /// @notice Takes into account the collateral value and the amount already minted;
+    function mintAmountAllowed(address _user) public view returns (uint256) {
+        uint256 usdCollateralValue = _getUsdValueFromToken(collateralDeposited[_user]);
+        uint256 maxUSDCLoanToValue = (usdCollateralValue * LOAN_TO_VALUE) / LOAN_PRECISION;
+        uint256 currentlyMinted = xusdcMinted[_user];
+        return (maxUSDCLoanToValue - currentlyMinted);
+    }
+
+    /// @notice This function is used to compute the maximum amount of collateral a user can withdraw from his position
+    function withdrawAmountAllowed(address _user) public view returns (uint256) {
+        // The amount of USDC minted;
+        uint256 currentlyMinted = xusdcMinted[_user];
+        // Token amount of the usdc minted;
+        uint256 tokenAmountOfxUSDCMinted = _getTokenValueFromUsd(currentlyMinted);
+        // How much token collateral user actually have;
+        uint256 userCollateral = collateralDeposited[_user];
+        // the difference between 50% of token collateral and the token value of xUSDC minted can be withdrawn without breaking LTV;
+        uint255 tokenAmountToWithdraw = (userCollateral * LOAN_TO_VALUE / LOAN_PRECISION) - tokenAmountOfxUSDCMinted;
+        return (tokenAmountToWithdraw);
     }
 }
