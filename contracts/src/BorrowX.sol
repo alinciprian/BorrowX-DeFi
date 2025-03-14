@@ -158,7 +158,7 @@ contract BorrowX is ReentrancyGuard {
     /// @notice This function allows user to deposit collateral and automatically mint the maximum  amount of xUSDC
     function depositAndMintMax(uint256 _amountToDeposit) public moreThanZero(_amountToDeposit) {
         depositCollateral(_amountToDeposit);
-        uint256 maxMint = mintAmountAllowed(msg.sender);
+        uint256 maxMint = _mintAmountAllowed(msg.sender);
         mintxUSDC(maxMint);
         emit CollateralDeposited(msg.sender, _amountToDeposit);
     }
@@ -243,13 +243,9 @@ contract BorrowX is ReentrancyGuard {
         return ((_amount * PRECISION) / (uint256(price) / ADDITIONAL_FEED_PRECISION));
     }
 
-    //////////////////////
-    ///Public view
-    //////////////////////
-
     /// @notice This function is used to compute the maximum amount of xUSDC a user can mint.
     /// @notice Takes into account the collateral value and the amount already minted;
-    function mintAmountAllowed(address _user) public view returns (uint256) {
+    function _mintAmountAllowed(address _user) internal view returns (uint256) {
         uint256 usdCollateralValue = _getUsdValueFromToken(collateralDeposited[_user]);
         uint256 maxUSDCLoanToValue = (usdCollateralValue * LOAN_TO_VALUE) / LOAN_PRECISION;
         uint256 currentlyMinted = xusdcMinted[_user];
@@ -257,7 +253,7 @@ contract BorrowX is ReentrancyGuard {
     }
 
     /// @notice This function is used to compute the maximum amount of collateral a user can withdraw from his position
-    function withdrawAmountAllowed(address _user) public view returns (uint256) {
+    function _withdrawAmountAllowed(address _user) internal view returns (uint256) {
         // The amount of USDC minted;
         uint256 currentlyMinted = xusdcMinted[_user];
         // Token amount of the usdc minted;
@@ -265,7 +261,21 @@ contract BorrowX is ReentrancyGuard {
         // How much token collateral user actually have;
         uint256 userCollateral = collateralDeposited[_user];
         // the difference between 50% of token collateral and the token value of xUSDC minted can be withdrawn without breaking LTV;
-        uint255 tokenAmountToWithdraw = (userCollateral * LOAN_TO_VALUE / LOAN_PRECISION) - tokenAmountOfxUSDCMinted;
+        uint256 tokenAmountToWithdraw = (userCollateral * LOAN_TO_VALUE / LOAN_PRECISION) - tokenAmountOfxUSDCMinted;
         return (tokenAmountToWithdraw);
+    }
+
+    //////////////////////
+    ///Public view
+    //////////////////////
+
+    function getMintAmountAllowed(address _user) public view returns (uint256) {
+        uint256 mintAmountAllowed = _mintAmountAllowed(_user);
+        return mintAmountAllowed;
+    }
+
+    function withdrawAmountAllowed(address _user) public view returns (uint256) {
+        uint256 withdrawAmountAllowed = _withdrawAmountAllowed(_user);
+        return withdrawAmountAllowed;
     }
 }
