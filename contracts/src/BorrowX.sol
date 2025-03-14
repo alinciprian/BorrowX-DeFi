@@ -59,7 +59,7 @@ contract BorrowX is ReentrancyGuard {
     //////////////////////
 
     event CollateralDeposited(address indexed user, uint256 amount);
-    event CollateralRedeemed(address indexed redeemFrom, address indexed refeemTo, uint256 amount);
+    event CollateralRedeemed(address indexed redeemFrom, address indexed redeemTo, uint256 amount);
 
     //////////////////////
     ///Modifiers
@@ -101,6 +101,7 @@ contract BorrowX is ReentrancyGuard {
         if (!success) {
             revert BorrowX__TransferFailed();
         }
+        emit CollateralDeposited(msg.sender, _amountToDeposit);
     }
 
     /// @notice This function allows users to mint xUSDC;
@@ -126,6 +127,7 @@ contract BorrowX is ReentrancyGuard {
         // execute transfer
         bool success = IERC20(collateralTokenAddress).transfer(msg.sender, _amountToWithdraw);
         if (!success) revert BorrowX__TransferFailed();
+        emit CollateralRedeemed(msg.sender, msg.sender, _amountToWithdraw);
     }
 
     /// @notice This function allows users to liquidate positions that become too undercolllateralized;
@@ -150,6 +152,7 @@ contract BorrowX is ReentrancyGuard {
         if (!success) revert BorrowX__TransferFailed();
         // check if indeed user debt was paid;
         if (xusdcMinted[_userForLiquidation] > 0) revert BorrowX__DebtWasNotPaid();
+        emit CollateralRedeemed(_userForLiquidation, msg.sender, tokenAmountToBeSent);
     }
 
     /// @notice This function allows user to deposit collateral and automatically mint the maximum  amount of xUSDC
@@ -157,6 +160,7 @@ contract BorrowX is ReentrancyGuard {
         depositCollateral(_amountToDeposit);
         uint256 maxMint = mintAmountAllowed(msg.sender);
         mintxUSDC(maxMint);
+        emit CollateralDeposited(msg.sender, _amountToDeposit);
     }
 
     /// @notice Users can use this function in order to burn their xUSDC.
