@@ -1,0 +1,14 @@
+mintxUSDC.t.sol
+└── given user calls mintxUSDC function
+    ├── when the input amount is invalid
+    │   └── it should revert with TransferFailed()
+    └── when the input amount is valid
+        ├── when the amount breaks LTV
+        │    └── it should revert with ExceedsLoanToValue()
+        └── when the amount does not break LTV
+             ├── it should update storage
+             └── it should mint xUSDC
+                    ├── when minting fails 
+                    │   └── it should revert with MintingFailed()
+                    └── when minting success
+                        └── it should emit event 
