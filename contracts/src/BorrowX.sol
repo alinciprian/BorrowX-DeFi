@@ -9,11 +9,11 @@ import {OracleLib, AggregatorV3Interface} from "./libraries/OracleLib.sol";
 /// @title BorrowX - A borrowing DeFi protocol
 /// @author AlinCiprian
 /// @notice This contract allows users to borrow xUSDC against collateral(wETH); Loan-to-Value will be 50%, meaning that
-/// users cand borrow half the value that they lock in the contract. Liquidation threshold will be 75% and it is the point where
+/// users cand borrow half the value that they lock in the contract. Liquidation threshold will be 80% and it is the point where
 /// a position is listed for liquidation. In order to incentivize other users to liquidate the position, the liquidator will receive
 /// 10% discount on the collateral.
 /// @notice The system is meant to be overcollateralized at all times.
-/// xUSDC is backed all the time by an equivalent amount in wETH in order to mantain 1:1 USD ratio.
+/// xUSDC is backed all the time by an equivalent amount in ETH in order to mantain 1:1 USD ratio.
 
 contract BorrowX is ReentrancyGuard {
     //////////////////////
@@ -60,6 +60,8 @@ contract BorrowX is ReentrancyGuard {
 
     event CollateralDeposited(address indexed user, uint256 amount);
     event CollateralRedeemed(address indexed redeemFrom, address indexed redeemTo, uint256 amount);
+    event xUSDCMinted(address indexed user, uint256 amount);
+    event xUSDCBurnt(address indexed user, uint256 amount);
 
     //////////////////////
     ///Modifiers
@@ -92,82 +94,43 @@ contract BorrowX is ReentrancyGuard {
 
     /// @notice This function allows user to deposit collateral
     /// @param _amountToDeposit - The amount of collateral to be deposited
-    function depositCollateral(uint256 _amountToDeposit) public moreThanZero(_amountToDeposit) {
-        if (IERC20(collateralTokenAddress).balanceOf(msg.sender) < _amountToDeposit) {
-            revert BorrowX__AmountExceedsBalance();
-        }
-        collateralDeposited[msg.sender] += _amountToDeposit;
-        bool success = IERC20(collateralTokenAddress).transferFrom(msg.sender, address(this), _amountToDeposit);
-        if (!success) {
-            revert BorrowX__TransferFailed();
-        }
-        emit CollateralDeposited(msg.sender, _amountToDeposit);
+    function depositCollateral(uint256 _amountToDeposit) public payable moreThanZero(_amountToDeposit) {
+        _depositCollateral(_amountToDeposit);
     }
 
     /// @notice This function allows users to mint xUSDC;
     /// @notice First we check if the desired amount to be minted is allowed by the protocol; then we update the database and mint;
     /// @notice CEI pattern being used to avoid reentrancy;
     function mintxUSDC(uint256 _amountToMint) public moreThanZero(_amountToMint) {
-        _checkLoanToValue(msg.sender, _amountToMint, 0);
+        _checkLoanToValue(_amountToMint, 0);
         xusdcMinted[msg.sender] += _amountToMint;
         bool minted = i_xusdc.mint(msg.sender, _amountToMint);
         if (!minted) {
             revert BorrowX__MintFailed();
         }
+
+        emit xUSDCMinted(msg.sender, _amountToMint);
+    }
+
+    /// @notice This function allows user to deposit collateral and automatically mint the maximum  amount of xUSDC
+    function depositAndMintMax(uint256 _amountToDeposit) public payable moreThanZero(_amountToDeposit) {
+        _depositCollateral(_amountToDeposit);
+        uint256 maxMint = _mintAmountAllowed(msg.sender);
+        mintxUSDC(maxMint);
     }
 
     /// @notice This function allows withdrawal of funds assuming protocol conditions are met;
     function withdrawCollateral(uint256 _amountToWithdraw) public moreThanZero(_amountToWithdraw) {
         // we check if the desired operation breaks Loan-To-Value
-        _checkLoanToValue(msg.sender, 0, _amountToWithdraw);
+        _checkLoanToValue(0, _amountToWithdraw);
 
         // update storage
         collateralDeposited[msg.sender] -= _amountToWithdraw;
 
         // execute transfer
-        bool success = IERC20(collateralTokenAddress).transfer(msg.sender, _amountToWithdraw);
+        (bool success,) = msg.sender.call{value: _amountToWithdraw}("");
         if (!success) revert BorrowX__TransferFailed();
         emit CollateralRedeemed(msg.sender, msg.sender, _amountToWithdraw);
-    }
-
-    /// @notice This function allows users to liquidate positions that become too undercolllateralized;
-    /// @notice As incentive for liquidation, the liquidator gets a 10% discount on the collateral;
-    function liquidate(address _userForLiquidation) public {
-        // we check if user is eligible to be liquidated;
-        bool eligibleForLiquidation = _isEligibleForLiquidation(_userForLiquidation);
-        if (eligibleForLiquidation) revert BorrowX__UserHasSufficientCollateral();
-
-        //xUSDC amount to be paid by the liquidator;
-        uint256 debtToBePaid = xusdcMinted[_userForLiquidation];
-        // token amount of the xUSDC debt;
-        uint256 tokenAmountOfDebt = _getTokenValueFromUsd(debtToBePaid);
-        // we calculate the 10% bonus for the liquidator;
-        uint256 tokenLiquidationBonus = (tokenAmountOfDebt * LOAN_LIQUIDATION_DISCOUNT) / LOAN_PRECISION;
-        uint256 tokenAmountToBeSent = tokenAmountOfDebt + tokenLiquidationBonus;
-
-        //step 1 -> the liquidator burns the amount of xUSDC owned by the user ;
-        _burnxUSDC(debtToBePaid, _userForLiquidation, msg.sender);
-        //step 2 -> the liquidator gets the equivalent token collateral + 10%;
-        bool success = IERC20(collateralTokenAddress).transfer(msg.sender, tokenAmountToBeSent);
-        if (!success) revert BorrowX__TransferFailed();
-        // check if indeed user debt was paid;
-        if (xusdcMinted[_userForLiquidation] > 0) revert BorrowX__DebtWasNotPaid();
-        emit CollateralRedeemed(_userForLiquidation, msg.sender, tokenAmountToBeSent);
-    }
-
-    /// @notice This function allows user to deposit collateral and automatically mint the maximum  amount of xUSDC
-    function depositAndMintMax(uint256 _amountToDeposit) public moreThanZero(_amountToDeposit) {
-        depositCollateral(_amountToDeposit);
-        uint256 maxMint = _mintAmountAllowed(msg.sender);
-        mintxUSDC(maxMint);
-        emit CollateralDeposited(msg.sender, _amountToDeposit);
-    }
-
-    /// @notice Users can use this function in order to burn their xUSDC.
-    /// @notice Might want to use this if you are getting too close to liquidation threshold;
-    /// @notice Used by a user to burn xUSDC on his own behalf
-    function burnxUSDC(uint256 _amountToBurn) public moreThanZero(_amountToBurn) {
-        _burnxUSDC(_amountToBurn, msg.sender, msg.sender);
     }
 
     /// @notice Function allows user to pay the debt and get collateral back;
@@ -184,6 +147,38 @@ contract BorrowX is ReentrancyGuard {
         withdrawCollateral(amountToSend);
     }
 
+    /// @notice This function allows users to liquidate positions that become too undercolllateralized;
+    /// @notice As incentive for liquidation, the liquidator gets a 10% discount on the collateral;
+    function liquidate(address _userForLiquidation) public {
+        // we check if user is eligible to be liquidated;
+        bool eligibleForLiquidation = _isEligibleForLiquidation(_userForLiquidation);
+        if (eligibleForLiquidation) revert BorrowX__UserHasSufficientCollateral();
+
+        //xUSDC amount to be paid by the liquidator;
+        uint256 debtToBePaid = xusdcMinted[_userForLiquidation];
+        // token amount of the xUSDC debt;
+        uint256 tokenAmountOfDebt = _getTokenAmountFromUsd(debtToBePaid);
+        // we calculate the 10% bonus for the liquidator;
+        uint256 tokenLiquidationBonus = (tokenAmountOfDebt * LOAN_LIQUIDATION_DISCOUNT) / LOAN_PRECISION;
+        uint256 tokenAmountToBeSent = tokenAmountOfDebt + tokenLiquidationBonus;
+
+        //step 1 -> the liquidator burns the amount of xUSDC owned by the user ;
+        _burnxUSDC(debtToBePaid, _userForLiquidation, msg.sender);
+        //step 2 -> the liquidator gets the equivalent token collateral + 10%;
+        (bool success,) = msg.sender.call{value: tokenAmountToBeSent}("");
+        if (!success) revert BorrowX__TransferFailed();
+        // check if indeed user debt was paid;
+        if (xusdcMinted[_userForLiquidation] > 0) revert BorrowX__DebtWasNotPaid();
+        emit CollateralRedeemed(_userForLiquidation, msg.sender, tokenAmountToBeSent);
+    }
+
+    /// @notice Users can use this function in order to burn their xUSDC.
+    /// @notice Might want to use this if you are getting too close to liquidation threshold;
+    /// @notice Used by a user to burn xUSDC on his own behalf
+    function burnxUSDC(uint256 _amountToBurn) public moreThanZero(_amountToBurn) {
+        _burnxUSDC(_amountToBurn, msg.sender, msg.sender);
+    }
+
     //////////////////////
     ///Internal functions
     //////////////////////
@@ -194,6 +189,15 @@ contract BorrowX is ReentrancyGuard {
         bool success = i_xusdc.transferFrom(_xUSDCfrom, address(this), _amountToBurn);
         if (!success) revert BorrowX__TransferFailed();
         i_xusdc.burn(_amountToBurn);
+        emit xUSDCBurnt(_beneficiary, _amountToBurn);
+    }
+
+    /// @notice The function is used to deposit collateral;
+    function _depositCollateral(uint256 _amountToDeposit) internal moreThanZero(_amountToDeposit) {
+        collateralDeposited[msg.sender] += _amountToDeposit;
+        (bool success,) = address(this).call{value: _amountToDeposit}("");
+        if (!success) revert BorrowX__TransferFailed();
+        emit CollateralDeposited(msg.sender, _amountToDeposit);
     }
 
     //////////////////////
@@ -214,15 +218,15 @@ contract BorrowX is ReentrancyGuard {
     }
 
     /// @dev This functions checks if the minting or withdraw operation will  break Loan-to-value threshold;
-    /// Function must revert if 1:2 ratio is exceeded;
+    /// Function must revert if 1:2 ratio is reached;
     /// @param _amountToMint Will be zero if user just tries to withdraw;
     /// @param _amountToWithdraw Will be zero if user just tries to mint;
-    function _checkLoanToValue(address _user, uint256 _amountToMint, uint256 _amountToWithdraw) internal view {
-        if (xusdcMinted[_user] == 0) return; // early return in case use has no debt
-        if (_amountToWithdraw > collateralDeposited[_user]) revert BorrowX__InsuficientBalance();
-        uint256 userCollateralAmount = collateralDeposited[_user] - _amountToWithdraw;
+    function _checkLoanToValue(uint256 _amountToMint, uint256 _amountToWithdraw) internal view {
+        if (xusdcMinted[msg.sender] == 0) return; // early return in case use has no debt
+        if (_amountToWithdraw > collateralDeposited[msg.sender]) revert BorrowX__InsuficientBalance();
+        uint256 userCollateralAmount = collateralDeposited[msg.sender] - _amountToWithdraw;
         uint256 usdValueOfCollateral = _getUsdValueFromToken(userCollateralAmount);
-        uint256 totalMintedAfter = xusdcMinted[_user] + _amountToMint;
+        uint256 totalMintedAfter = xusdcMinted[msg.sender] + _amountToMint;
         if ((usdValueOfCollateral * LOAN_TO_VALUE) < (totalMintedAfter * LOAN_PRECISION)) {
             revert BorrowX__ExceedsLoanToValue();
         }
@@ -237,7 +241,7 @@ contract BorrowX is ReentrancyGuard {
     }
 
     /// @notice This function is meant to compute the token value out of USD value
-    function _getTokenValueFromUsd(uint256 _amount) internal view returns (uint256) {
+    function _getTokenAmountFromUsd(uint256 _amount) internal view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedCollateralTokenAddress);
         (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
         return ((_amount * PRECISION) / (uint256(price) / ADDITIONAL_FEED_PRECISION));
@@ -257,7 +261,7 @@ contract BorrowX is ReentrancyGuard {
         // The amount of USDC minted;
         uint256 currentlyMinted = xusdcMinted[_user];
         // Token amount of the usdc minted;
-        uint256 tokenAmountOfxUSDCMinted = _getTokenValueFromUsd(currentlyMinted);
+        uint256 tokenAmountOfxUSDCMinted = _getTokenAmountFromUsd(currentlyMinted);
         // How much token collateral user actually have;
         uint256 userCollateral = collateralDeposited[_user];
         // the difference between 50% of token collateral and the token value of xUSDC minted can be withdrawn without breaking LTV;
