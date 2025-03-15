@@ -79,11 +79,9 @@ contract BorrowX is ReentrancyGuard {
     ///Functions
     //////////////////////
 
-    /// @param _collateralTokenAddress - the address of the token that will be used as collateral
     /// @param _priceFeedAddress - the priceFeed address of the token used as collateral
     /// @param _xUSDCAddress - the address of the xUSDC contract
-    constructor(address _collateralTokenAddress, address _priceFeedAddress, address _xUSDCAddress) {
-        collateralTokenAddress = _collateralTokenAddress;
+    constructor(address _priceFeedAddress, address _xUSDCAddress) {
         priceFeedCollateralTokenAddress = _priceFeedAddress;
         i_xusdc = xUSDC(_xUSDCAddress);
     }

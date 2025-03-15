@@ -10,15 +10,15 @@ contract depositCollateralTest is Test {
     BorrowX public borrowXContract;
     xUSDC public xUSDCContract;
 
-    ethPriceFeedAddress = "0x4aDC67696bA383F43DD60A9e78F2C97Fbbfc7cb1";
+    address ethPriceFeedAddress = 0x4aDC67696bA383F43DD60A9e78F2C97Fbbfc7cb1;
     address public owner = address(1);
     address public user1 = makeAddr("user1");
     address public user2 = makeAddr("user2");
 
-    function setUp() {
+    function setUp() public {
         //deploy contracts
-        xUSDC = new xUSDCContract();
-        borrowXContract = new BorrowX();
+        xUSDCContract = new xUSDC();
+        borrowXContract = new BorrowX(ethPriceFeedAddress, address(xUSDCContract));
         // _collateralTokenAddress, address _priceFeedAddress, address _xUSDCAddres
     }
 }
