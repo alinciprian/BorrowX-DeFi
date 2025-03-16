@@ -230,7 +230,6 @@ contract BorrowX is ReentrancyGuard {
     /// @param _amountToMint Will be zero if user just tries to withdraw;
     /// @param _amountToWithdraw Will be zero if user just tries to mint;
     function _checkLoanToValue(uint256 _amountToMint, uint256 _amountToWithdraw) internal view {
-        if (xusdcMinted[msg.sender] == 0) return; // early return in case use has no debt
         if (_amountToWithdraw > collateralDeposited[msg.sender]) revert BorrowX__InsuficientBalance();
         uint256 userCollateralAmount = collateralDeposited[msg.sender] - _amountToWithdraw;
         uint256 usdValueOfCollateral = _getUsdValueFromToken(userCollateralAmount);
