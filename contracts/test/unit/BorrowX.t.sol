@@ -20,7 +20,7 @@ contract depositCollateralTest is Test {
 
     uint256 ownerUSDCStartingBalance = 1000e18;
     uint256 startingAmount = 100 ether;
-    uint256 depositAmount = 5 ether;
+    uint256 depositAmount = 1 ether;
 
     uint8 public constant DECIMALS = 8;
     int256 public constant ETH_USD_PRICE = 2000e8;
@@ -41,7 +41,7 @@ contract depositCollateralTest is Test {
     ///depositCollateral
     //////////////////////////
 
-    function testItShouldRevertIfAmountIsZero() public {
+    function testItShouldRevertIfDepositAmountIsZero() public {
         vm.startPrank(bob);
 
         vm.expectRevert(BorrowX.BorrowX__NeedsMoreThanZero.selector);
@@ -50,7 +50,7 @@ contract depositCollateralTest is Test {
         vm.stopPrank();
     }
 
-    function testItShouldUpdateStorage() public {
+    function testItShouldUpdateStorageAfterDeposit() public {
         vm.startPrank(bob);
 
         borrowXContract.depositCollateral{value: depositAmount}();
@@ -101,8 +101,48 @@ contract depositCollateralTest is Test {
     function testItShouldRevertIfMintingExceedsLTV() public {
         vm.startPrank(bob);
 
+        vm.expectRevert(BorrowX.BorrowX__ExceedsLoanToValue.selector);
         borrowXContract.mintxUSDC(10e18);
-        //borrowXContract.depositCollateral{value: depositAmount}();
+
+        vm.stopPrank();
+    }
+
+    function testItShouldUpdateStorageAfterMinting() public {
+        vm.deal(alice, 1 ether);
+        vm.startPrank(alice);
+
+        borrowXContract.depositCollateral{value: depositAmount}();
+        borrowXContract.mintxUSDC(900e18);
+
+        uint256 aliceMinted = borrowXContract.getUserMintedXUSDC(alice);
+
+        assertEq(aliceMinted, 900e18);
+
+        vm.stopPrank();
+    }
+
+    function testItShouldTransferFundsAfterMinting() public {
+        vm.deal(alice, 1 ether);
+        vm.startPrank(alice);
+
+        borrowXContract.depositCollateral{value: depositAmount}();
+        borrowXContract.mintxUSDC(900e18);
+
+        uint256 aliceBalance = xUSDCContract.balanceOf(alice);
+        assertEq(aliceBalance, 900e18);
+
+        vm.stopPrank();
+    }
+
+    function testItShouldEmitEventAfterMinting() public {
+        vm.deal(alice, 1 ether);
+        vm.startPrank(alice);
+
+        borrowXContract.depositCollateral{value: depositAmount}();
+
+        vm.expectEmit();
+        emit BorrowX.xUSDCMinted(alice, 900e18);
+        borrowXContract.mintxUSDC(900e18);
 
         vm.stopPrank();
     }
