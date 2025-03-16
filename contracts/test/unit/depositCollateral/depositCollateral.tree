@@ -4,10 +4,7 @@ depositCollateral.t.sol
     │   └── it should revert if amount is 0
     └── when the amount is valid
         ├── it should update storage
-        └── it should transfer funds
-             └── when transfer fails
-             │    └── it should revert
-             └── when transfer success
-                  └── it should  emit event
+        ├── it should transfer funds
+        └── it should  emit event
             
            

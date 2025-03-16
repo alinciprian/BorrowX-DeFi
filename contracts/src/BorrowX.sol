@@ -22,6 +22,7 @@ contract BorrowX is ReentrancyGuard {
     error BorrowX__TransferFailed();
     error BorrowX__AmountExceedsBalance();
     error BorrowX__NeedsMoreThanZero();
+    error BorrowX__MsgValueIsZero();
     error BorrowX__MintFailed();
     error BorrowX__ExceedsLoanToValue();
     error BorrowX__MustPayDebtFirst();
@@ -63,12 +64,22 @@ contract BorrowX is ReentrancyGuard {
     event xUSDCMinted(address indexed user, uint256 amount);
     event xUSDCBurnt(address indexed user, uint256 amount);
 
+    receive() external payable {}
+
     //////////////////////
     ///Modifiers
     //////////////////////
 
-    /// @notice - used to ensure input is not zero
-    modifier moreThanZero(uint256 _amount) {
+    /// @notice - used to ensure value sent is not zero
+    modifier valueMoreThanZero() {
+        if (msg.value == 0) {
+            revert BorrowX__MsgValueIsZero();
+        }
+        _;
+    }
+
+    /// @notice - used to ensure input  is not zero
+    modifier inputNotZero(uint256 _amount) {
         if (_amount == 0) {
             revert BorrowX__NeedsMoreThanZero();
         }
@@ -91,15 +102,14 @@ contract BorrowX is ReentrancyGuard {
     //////////////////////
 
     /// @notice This function allows user to deposit collateral
-    /// @param _amountToDeposit - The amount of collateral to be deposited
-    function depositCollateral(uint256 _amountToDeposit) public payable moreThanZero(_amountToDeposit) {
-        _depositCollateral(_amountToDeposit);
+    function depositCollateral() public payable {
+        _depositCollateral(msg.value);
     }
 
     /// @notice This function allows users to mint xUSDC;
     /// @notice First we check if the desired amount to be minted is allowed by the protocol; then we update the database and mint;
     /// @notice CEI pattern being used to avoid reentrancy;
-    function mintxUSDC(uint256 _amountToMint) public moreThanZero(_amountToMint) {
+    function mintxUSDC(uint256 _amountToMint) public inputNotZero(_amountToMint) {
         _checkLoanToValue(_amountToMint, 0);
         xusdcMinted[msg.sender] += _amountToMint;
         bool minted = i_xusdc.mint(msg.sender, _amountToMint);
@@ -111,14 +121,14 @@ contract BorrowX is ReentrancyGuard {
     }
 
     /// @notice This function allows user to deposit collateral and automatically mint the maximum  amount of xUSDC
-    function depositAndMintMax(uint256 _amountToDeposit) public payable moreThanZero(_amountToDeposit) {
-        _depositCollateral(_amountToDeposit);
+    function depositAndMintMax() public payable {
+        _depositCollateral(msg.value);
         uint256 maxMint = _mintAmountAllowed(msg.sender);
         mintxUSDC(maxMint);
     }
 
     /// @notice This function allows withdrawal of funds assuming protocol conditions are met;
-    function withdrawCollateral(uint256 _amountToWithdraw) public moreThanZero(_amountToWithdraw) {
+    function withdrawCollateral(uint256 _amountToWithdraw) public inputNotZero(_amountToWithdraw) {
         // we check if the desired operation breaks Loan-To-Value
         _checkLoanToValue(0, _amountToWithdraw);
 
@@ -173,7 +183,7 @@ contract BorrowX is ReentrancyGuard {
     /// @notice Users can use this function in order to burn their xUSDC.
     /// @notice Might want to use this if you are getting too close to liquidation threshold;
     /// @notice Used by a user to burn xUSDC on his own behalf
-    function burnxUSDC(uint256 _amountToBurn) public moreThanZero(_amountToBurn) {
+    function burnxUSDC(uint256 _amountToBurn) public inputNotZero(_amountToBurn) {
         _burnxUSDC(_amountToBurn, msg.sender, msg.sender);
     }
 
@@ -191,7 +201,7 @@ contract BorrowX is ReentrancyGuard {
     }
 
     /// @notice The function is used to deposit collateral;
-    function _depositCollateral(uint256 _amountToDeposit) internal moreThanZero(_amountToDeposit) {
+    function _depositCollateral(uint256 _amountToDeposit) internal inputNotZero(_amountToDeposit) {
         collateralDeposited[msg.sender] += _amountToDeposit;
         (bool success,) = address(this).call{value: _amountToDeposit}("");
         if (!success) revert BorrowX__TransferFailed();
