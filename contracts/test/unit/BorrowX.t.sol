@@ -25,6 +25,14 @@ contract depositCollateralTest is Test {
     uint8 public constant DECIMALS = 8;
     int256 public constant ETH_USD_PRICE = 2000e8;
 
+    uint256 constant LOAN_TO_VALUE = 50;
+    uint256 constant LOAN_LIQUIDATION_DISCOUNT = 10;
+    uint256 constant LOAN_LIQUIDATION_THRESHOLD = 80;
+    uint256 constant LOAN_PRECISION = 100;
+
+    uint256 constant PRECISION = 1e18;
+    uint256 constant ADDITIONAL_FEED_PRECISION = 1e10;
+
     function setUp() public {
         //deploy contracts
         MockV3AggregatorContract = new MockV3Aggregator(DECIMALS, ETH_USD_PRICE);
@@ -145,5 +153,24 @@ contract depositCollateralTest is Test {
         borrowXContract.mintxUSDC(900e18);
 
         vm.stopPrank();
+    }
+
+    //////////////////////////
+    ///depositAndMintMax
+    //////////////////////////
+
+    function testItShouldDepositAndMintMaxAmount() public {
+        vm.deal(alice, 2 ether);
+        vm.startPrank(alice);
+
+        borrowXContract.depositAndMintMax{value: 2 * depositAmount}();
+
+        uint256 aliceBalance = xUSDCContract.balanceOf(alice);
+        console.log(
+            "collateral price", ((depositAmount * uint256(ETH_USD_PRICE) * LOAN_TO_VALUE) / LOAN_PRECISION) / 1e8
+        );
+        uint256 aliceShouldHave = ((2 * depositAmount * uint256(ETH_USD_PRICE) * LOAN_TO_VALUE) / LOAN_PRECISION) / 1e8;
+
+        assertEq(aliceBalance, aliceShouldHave);
     }
 }
