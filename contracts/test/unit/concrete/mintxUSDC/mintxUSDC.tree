@@ -1,8 +1,7 @@
 mintxUSDC.t.sol
-└── given user calls mintxUSDC function
-    ├── when the input amount is invalid
-    │   └── it should revert with NeedsMoreThanZero()
-    └── when the input amount is valid
+├── when the input amount is invalid
+│       └── it should revert with NeedsMoreThanZero()
+└── when the input amount is valid
         ├── when the amount breaks LTV
         │    └── it should revert with ExceedsLoanToValue()
         └── when the amount does not break LTV
@@ -12,3 +11,6 @@ mintxUSDC.t.sol
                     │   └── it should revert with MintingFailed()
                     └── when minting success
                         └── it should emit event 
+   
+        
+    

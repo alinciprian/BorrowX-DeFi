@@ -1,0 +1,10 @@
+depositCollateral.t.sol
+├── when the deposit amount IS 0
+│       └── it should revert with BorrowX__NeedsMoreThanZero();
+└── when the amount IS NOT 0
+        ├── it should update storage
+        ├── it should transfer funds
+        └── it should  emit event
+    
+            
+           

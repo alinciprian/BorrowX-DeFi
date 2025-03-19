@@ -20,12 +20,10 @@ contract BorrowX is ReentrancyGuard {
     ///Errors
     //////////////////////
     error BorrowX__TransferFailed();
-    error BorrowX__AmountExceedsBalance();
     error BorrowX__NeedsMoreThanZero();
     error BorrowX__MsgValueIsZero();
     error BorrowX__MintFailed();
     error BorrowX__ExceedsLoanToValue();
-    error BorrowX__MustPayDebtFirst();
     error BorrowX__InsuficientBalance();
     error BorrowX__UserHasSufficientCollateral();
     error BorrowX__DebtWasNotPaid();
@@ -148,7 +146,7 @@ contract BorrowX is ReentrancyGuard {
         burnxUSDC(xusdcMinted[msg.sender]);
 
         // step 2 we double check that the debt is indeed paid
-        if (xusdcMinted[msg.sender] > 0) revert BorrowX__MustPayDebtFirst();
+        if (xusdcMinted[msg.sender] > 0) revert BorrowX__DebtWasNotPaid();
 
         // step 3 execute the transfer of funds
         uint256 amountToSend = collateralDeposited[msg.sender];
