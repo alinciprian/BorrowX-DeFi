@@ -21,7 +21,6 @@ contract BorrowX is ReentrancyGuard {
     //////////////////////
     error BorrowX__TransferFailed();
     error BorrowX__NeedsMoreThanZero();
-    error BorrowX__MsgValueIsZero();
     error BorrowX__MintFailed();
     error BorrowX__ExceedsLoanToValue();
     error BorrowX__InsuficientBalance();
