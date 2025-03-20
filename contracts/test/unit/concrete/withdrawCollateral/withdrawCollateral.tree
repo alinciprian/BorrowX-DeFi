@@ -1,0 +1,19 @@
+withdrawCollateral.t.sol
+├── when the withdraw amount IS Zero
+│      └── it should revert with BorrowX__NeedsMoreThanZero()
+└── when the withdraw amount IS NOT Zero
+        ├── when withraw amount is greater than balance
+        │      └── it should revert with BorrowX__InsuficientBalance()
+        └── when withdraw amount is less than balance
+                ├── when withdraw amount breaks LTV
+                │      └── it should revert with BorrowX__ExceedsLoanToValue()
+                └── when the amount does not break LTV
+                       ├── it should update storage
+                       └── it should execute transfer
+                            ├── when the transfer fails
+                            │      └── it should revert with BorrowX__TransferFailed()
+                            └── when the transfer is succesful
+                                   ├── it should transfer funds
+                                   └── it should emit event
+
+

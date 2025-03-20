@@ -68,14 +68,6 @@ contract BorrowX is ReentrancyGuard {
     ///Modifiers
     //////////////////////
 
-    /// @notice - used to ensure value sent is not zero
-    modifier valueMoreThanZero() {
-        if (msg.value == 0) {
-            revert BorrowX__MsgValueIsZero();
-        }
-        _;
-    }
-
     /// @notice - used to ensure input  is not zero
     modifier inputNotZero(uint256 _amount) {
         if (_amount == 0) {
