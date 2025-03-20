@@ -6,11 +6,9 @@ mintxUSDC.t.sol
         │    └── it should revert with ExceedsLoanToValue()
         └── when the amount does not break LTV
              ├── it should update storage
-             └── it should mint xUSDC
-                    ├── when minting fails 
-                    │   └── it should revert with MintingFailed()
-                    └── when minting success
-                        └── it should emit event 
+             ├── it should mint xUSDC
+             └── it should emit event      
+                   
    
         
     
