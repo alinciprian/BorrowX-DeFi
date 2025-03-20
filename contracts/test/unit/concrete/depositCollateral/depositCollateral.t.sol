@@ -39,7 +39,7 @@ contract depositCollateralTest is Base_Test {
 
         // Store the balance of bob and the balance of the contract before the deposit
         uint256 contractBalanceBefore = address(borrowXContract).balance;
-        uint256 bobBalanceBefore = address(users.bob).balance;
+        uint256 bobBalanceBefore = users.bob.balance;
 
         //Expect the {CollateralDeposited} event to be emitted
         vm.expectEmit();
@@ -50,7 +50,7 @@ contract depositCollateralTest is Base_Test {
 
         // Store the balance of bob and the balance of the contract after the deposit
         uint256 contractBalanceAfter = address(borrowXContract).balance;
-        uint256 bobBalanceAfter = address(users.bob).balance;
+        uint256 bobBalanceAfter = users.bob.balance;
 
         // Get bob's balance of collateral deposited
         uint256 collateralDeposited = borrowXContract.getUserCollateralDeposited(users.bob);
