@@ -20,17 +20,25 @@ contract depositCollateralTest is Base_Test {
     ///depositAndMintMax
     //////////////////////////
 
-    function testItShouldDepositAndMintMaxAmount() public {
+    /// @dev the function uses two functions which are tested separately : depositCollateral and mintxUSDC
+    function test_depositAndMintMax() public {
+        // Make eve the caller of the function
         vm.startPrank(users.eve);
 
-        borrowXContract.depositAndMintMax{value: 2 * depositAmount}();
+        // Run the test
+        borrowXContract.depositAndMintMax{value: depositAmount}();
 
-        uint256 aliceBalance = xUSDCContract.balanceOf(users.eve);
+        // We store the xUSDC balance of Eve
+        uint256 eveBalance = xUSDCContract.balanceOf(users.eve);
+
         uint256 ethPrice = uint256(Constants.ETH_USD_PRICE);
         uint256 loan_to_value = Constants.LOAN_TO_VALUE;
         uint256 loan_precision = Constants.LOAN_PRECISION;
-        uint256 aliceShouldHave = ((2 * depositAmount * ethPrice * loan_to_value) / loan_precision) / 1e8;
 
-        assertEq(aliceBalance, aliceShouldHave);
+        // We compute the amount of xUSDC that eve should be allowed to mint
+        uint256 eveShouldHave = ((depositAmount * ethPrice * loan_to_value) / loan_precision) / 1e8;
+
+        // We assert that eve's balance is succesfully satisfying the conditions required by the protocol
+        assertEq(eveBalance, eveShouldHave);
     }
 }
