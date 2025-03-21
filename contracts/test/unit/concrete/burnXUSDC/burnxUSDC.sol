@@ -26,6 +26,10 @@ contract depositCollateralTest is Base_Test {
 
         // Bob  mints the max amount of xUSDC valaible
         borrowXContract.mintxUSDC(MAXxUSDCMintAmount);
+
+        // We approve borrowXContract for xUSDC spending
+        xUSDCContract.approve(address(borrowXContract), type(uint256).max);
+
         vm.stopPrank();
     }
 
@@ -38,5 +42,51 @@ contract depositCollateralTest is Base_Test {
 
         // Run the test
         borrowXContract.burnxUSDC(0);
+    }
+
+    function test_revertWhen_userHasInsufficientBalance() public {
+        // Make bob the caller
+        vm.startPrank(users.bob);
+
+        // Expect the next call to revert with {BorrowX__InsuficientBalance}
+        vm.expectRevert(Errors.BorrowX__InsuficientBalance.selector);
+
+        // Run the test
+        borrowXContract.burnxUSDC(MAXxUSDCMintAmount + 1);
+    }
+
+    function test_burnXUSDC() public {
+        // Make bob the caller
+        vm.startPrank(users.bob);
+
+        // Get the  amount minted from storage - before burning
+        uint256 bobAmountMintedBefore = borrowXContract.getUserMintedXUSDC(users.bob);
+
+        // Get the xUSDC balance of Bob
+        uint256 xUSDCBobBalanceBefore = xUSDCContract.balanceOf(users.bob);
+
+        // We expect the {xUSDCBurnt} event to bve emitted
+        vm.expectEmit();
+        emit Events.xUSDCBurnt(users.bob, users.bob, MAXxUSDCMintAmount);
+
+        // Run the tests
+        borrowXContract.burnxUSDC(MAXxUSDCMintAmount);
+
+        // Get the amount minted from storage - after burning
+        uint256 bobAmountMintedAfter = borrowXContract.getUserMintedXUSDC(users.bob);
+
+        // Get the xUSDC balance of borrowXContract after burning
+        uint256 xUSDCContractBalanceAfter = xUSDCContract.balanceOf(address(borrowXContract));
+        // Get the xUSDC balance of Bob
+        uint256 xUSDCBobBalanceAfter = xUSDCContract.balanceOf(users.bob);
+
+        // We assert that the storage was updated as expected
+        assertEq(bobAmountMintedAfter, bobAmountMintedBefore - MAXxUSDCMintAmount);
+
+        // We assert that the funds were transfered from bob
+        assertEq(xUSDCBobBalanceAfter, xUSDCBobBalanceBefore - MAXxUSDCMintAmount);
+
+        // We assert that the funds were burnt
+        assertEq(xUSDCContractBalanceAfter, 0);
     }
 }
