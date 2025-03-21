@@ -1,0 +1,11 @@
+burnxUSDC.t.sol
+├── when the burn amount IS Zero
+│       └── it should revert with BorrowX__NeedsMoreThanZero();
+└── when the amount IS NOT Zero
+        ├── when the amount to burn is greater than balance owned
+        │       └── it should revert with BorrowX__InsuficientBalance();
+        └── when the amount to burn is less than balance owned
+                ├── it should update storage
+                ├── it should transfer funds 
+                ├── it should burn the funds
+                └── it should emit events

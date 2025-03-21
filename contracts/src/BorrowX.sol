@@ -130,6 +130,13 @@ contract BorrowX is ReentrancyGuard {
         emit CollateralRedeemed(msg.sender, msg.sender, _amountToWithdraw);
     }
 
+    /// @notice Users can use this function in order to burn their xUSDC.
+    /// @notice Might want to use this if you are getting too close to liquidation threshold;
+    /// @notice Used by a user to burn xUSDC on his own behalf
+    function burnxUSDC(uint256 _amountToBurn) public inputNotZero(_amountToBurn) {
+        _burnxUSDC(_amountToBurn, msg.sender, msg.sender);
+    }
+
     /// @notice Function allows user to pay the debt and get collateral back;
     /// @dev it can only be called once all the debt is paid
     function closePosition() public {
@@ -169,19 +176,15 @@ contract BorrowX is ReentrancyGuard {
         emit CollateralRedeemed(_userForLiquidation, msg.sender, tokenAmountToBeSent);
     }
 
-    /// @notice Users can use this function in order to burn their xUSDC.
-    /// @notice Might want to use this if you are getting too close to liquidation threshold;
-    /// @notice Used by a user to burn xUSDC on his own behalf
-    function burnxUSDC(uint256 _amountToBurn) public inputNotZero(_amountToBurn) {
-        _burnxUSDC(_amountToBurn, msg.sender, msg.sender);
-    }
-
     //////////////////////
     ///Internal functions
     //////////////////////
 
     /// @notice The core function that handles xUSDC burning
     function _burnxUSDC(uint256 _amountToBurn, address _beneficiary, address _xUSDCfrom) internal {
+        if (_amountToBurn > i_xusdc.balanceOf(_xUSDCfrom)) {
+            revert BorrowX__InsuficientBalance();
+        }
         xusdcMinted[_beneficiary] -= _amountToBurn;
         bool success = i_xusdc.transferFrom(_xUSDCfrom, address(this), _amountToBurn);
         if (!success) revert BorrowX__TransferFailed();
