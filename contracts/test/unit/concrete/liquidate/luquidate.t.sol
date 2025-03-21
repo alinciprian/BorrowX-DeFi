@@ -53,28 +53,48 @@ contract depositCollateralTest is Base_Test {
         // Make liquidator the caller
         vm.startPrank(users.liquidator);
 
+        // Get the eth balance of liquidator before
+        uint256 liquidatorETHBalanceBefore = users.liquidator.balance;
+
         // We update the price of ethereum to be 1250 - this is the level where bob is eligible for liquidation
         MockV3AggregatorContract.updateAnswer(ethUsdUpdatedPrice);
 
+        (, int256 price,,,) = MockV3AggregatorContract.latestRoundData();
+        console.log("price feed price", price);
+
         // Compute the amount of collateral liquidator should get after liquidation without bonus
         // We divide the amount of xUSDC liquidator is requested to burn by the price of eth and we get how much eth liquidator is entitled to
-        uint256 ethAmountWithoutBonus = MAXxUSDCMintAmount / uint256(ethUsdUpdatedPrice);
+        uint256 ethAmountWithoutBonus = (MAXxUSDCMintAmount / (uint256(price)) * 1e10);
+        console.log("withouBOnus", ethAmountWithoutBonus);
         // We add the 10% bonus
         uint256 bonusETH = (ethAmountWithoutBonus * Constants.LOAN_LIQUIDATION_DISCOUNT) / Constants.LOAN_PRECISION;
         // The total amount of ETH that the liquidator should get
-        uint256 liquidatorShouldGet = ethAmountWithoutBonus + bonusETH;
+        uint256 liquidatorShouldGet = (ethAmountWithoutBonus + bonusETH);
+        console.log("amount to be sent", liquidatorShouldGet);
 
-        // We expect the {CollateralRedeemed} event to be emitted
-        //vm.expectEmit();
-        //emit CollateralRedeemed(users.bob, users.liquidator, liquidatorShouldGet);
+        //We expect the {CollateralRedeemed} event to be emitted
+        vm.expectEmit();
+        emit CollateralRedeemed(users.bob, users.liquidator, liquidatorShouldGet);
 
         // Run the test
         borrowXContract.liquidate(users.bob);
 
         // Get the amount of collateral deposited for Bob
         uint256 bobCollateralDeposited = borrowXContract.getUserCollateralDeposited(users.bob);
+        // Get the amount of xUSDCMinted from storage
+        uint256 bobXUSDCMinted = borrowXContract.getUserMintedXUSDC(users.bob);
+
+        // Get the xUSDC balance of borrowXContract
+        uint256 xUSDCBalance = xUSDCContract.balanceOf(address(borrowXContract));
 
         // We assert that the storage is updated
         assertEq(bobCollateralDeposited, 0);
+        assertEq(bobXUSDCMinted, 0);
+
+        // We assert that the xUSDC was burn
+        assertEq(xUSDCBalance, 0);
+
+        // We assert that the correct amount of collateral is sent
+        assertEq(users.liquidator.balance, liquidatorShouldGet + liquidatorETHBalanceBefore);
     }
 }
