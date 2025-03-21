@@ -16,7 +16,7 @@ contract Base_Test is Test, Events {
     BorrowX public borrowXContract;
     xUSDC public xUSDCContract;
     MockV3Aggregator public MockV3AggregatorContract;
-    uint256 adminUSDCStartingBalance = 1000e18; // admin starts with 1000 xUSDC
+    uint256 liquidatorUSDCStartingBalance = 5000e18; // admin starts with 5000 xUSDC
 
     /*//////////////////////////////////////////////////////////////////////////
                                   SET-UP FUNCTION
@@ -29,10 +29,15 @@ contract Base_Test is Test, Events {
         borrowXContract = new BorrowX(address(MockV3AggregatorContract), address(xUSDCContract));
 
         //Create test users
-        users = Users({admin: createUser("admin"), eve: createUser("eve"), bob: createUser("bob")});
+        users = Users({
+            admin: createUser("admin"),
+            eve: createUser("eve"),
+            bob: createUser("bob"),
+            liquidator: createUser("liquidator")
+        });
 
-        //Mint some starting xUSDC for the admin
-        xUSDCContract.mint(users.admin, adminUSDCStartingBalance);
+        //Mint some starting xUSDC for the liquidator
+        xUSDCContract.mint(users.liquidator, liquidatorUSDCStartingBalance);
 
         //Transfers ownership of the xUSDC contract
         xUSDCContract.transferOwnership(address(borrowXContract));

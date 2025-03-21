@@ -142,11 +142,7 @@ contract BorrowX is ReentrancyGuard {
     function closePosition() public {
         // step 1 user burns the entire debt
         burnxUSDC(xusdcMinted[msg.sender]);
-
-        // step 2 we double check that the debt is indeed paid
-        if (xusdcMinted[msg.sender] > 0) revert BorrowX__DebtWasNotPaid();
-
-        // step 3 execute the transfer of funds
+        // step 2 execute the transfer of funds
         uint256 amountToSend = collateralDeposited[msg.sender];
         withdrawCollateral(amountToSend);
     }
@@ -156,7 +152,10 @@ contract BorrowX is ReentrancyGuard {
     function liquidate(address _userForLiquidation) public {
         // we check if user is eligible to be liquidated;
         bool eligibleForLiquidation = _isEligibleForLiquidation(_userForLiquidation);
-        if (eligibleForLiquidation) revert BorrowX__UserHasSufficientCollateral();
+        if (!eligibleForLiquidation) revert BorrowX__UserHasSufficientCollateral();
+
+        // _iserForLiquidation loose all the deposited collateral
+        collateralDeposited[_userForLiquidation] = 0;
 
         //xUSDC amount to be paid by the liquidator;
         uint256 debtToBePaid = xusdcMinted[_userForLiquidation];
@@ -164,9 +163,9 @@ contract BorrowX is ReentrancyGuard {
         uint256 tokenAmountOfDebt = _getTokenAmountFromUsd(debtToBePaid);
         // we calculate the 10% bonus for the liquidator;
         uint256 tokenLiquidationBonus = (tokenAmountOfDebt * LOAN_LIQUIDATION_DISCOUNT) / LOAN_PRECISION;
-        uint256 tokenAmountToBeSent = tokenAmountOfDebt + tokenLiquidationBonus;
+        uint256 tokenAmountToBeSent = (tokenAmountOfDebt + tokenLiquidationBonus);
 
-        //step 1 -> the liquidator burns the amount of xUSDC owned by the user ;
+        //step 1 -> the liquidator burns the amount of xUSDC owed by the targeted user ;
         _burnxUSDC(debtToBePaid, _userForLiquidation, msg.sender);
         //step 2 -> the liquidator gets the equivalent token collateral + 10%;
         (bool success,) = msg.sender.call{value: tokenAmountToBeSent}("");
@@ -214,7 +213,7 @@ contract BorrowX is ReentrancyGuard {
         // The amount of xUSDC minted
         uint256 xUSDCDebt = xusdcMinted[_user];
         // we check if the debt reaches 80% of the usd collateral value
-        return bool(usdCollateralValue * LOAN_LIQUIDATION_THRESHOLD < xUSDCDebt * LOAN_PRECISION);
+        return bool(usdCollateralValue * LOAN_LIQUIDATION_THRESHOLD <= xUSDCDebt * LOAN_PRECISION);
     }
 
     /// @dev This functions checks if the minting or withdraw operation will  break Loan-to-value threshold;
@@ -243,7 +242,7 @@ contract BorrowX is ReentrancyGuard {
     function _getTokenAmountFromUsd(uint256 _amount) internal view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedCollateralTokenAddress);
         (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
-        return ((_amount * PRECISION) / (uint256(price) / ADDITIONAL_FEED_PRECISION));
+        return ((_amount * PRECISION) / (uint256(price) * ADDITIONAL_FEED_PRECISION));
     }
 
     /// @notice This function is used to compute the maximum amount of xUSDC a user can mint.

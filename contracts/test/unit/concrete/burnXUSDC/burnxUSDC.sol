@@ -59,7 +59,7 @@ contract depositCollateralTest is Base_Test {
         // Make bob the caller
         vm.startPrank(users.bob);
 
-        // Get the  amount minted from storage - before burning
+        // Get the  amount minted from storage before burning
         uint256 bobAmountMintedBefore = borrowXContract.getUserMintedXUSDC(users.bob);
 
         // Get the xUSDC balance of Bob
@@ -72,7 +72,7 @@ contract depositCollateralTest is Base_Test {
         // Run the tests
         borrowXContract.burnxUSDC(MAXxUSDCMintAmount);
 
-        // Get the amount minted from storage - after burning
+        // Get the amount minted from storage after burning
         uint256 bobAmountMintedAfter = borrowXContract.getUserMintedXUSDC(users.bob);
 
         // Get the xUSDC balance of borrowXContract after burning

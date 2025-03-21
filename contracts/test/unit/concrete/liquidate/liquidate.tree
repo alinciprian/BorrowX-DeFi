@@ -1,0 +1,8 @@
+liquidate.t.sol
+├── when user IS NOT eligible for liquidation
+│       └── it should revert with BorrowX__UserHasSufficientCollateral()
+└── when user IS eligible for liquidation
+        ├── it should update storage
+        ├── it should burn the entire amount of xUSDC owned
+        ├── it should transfer corect amount of collateral + bonus
+        └── it should emit event {CollateralRedeemed}
