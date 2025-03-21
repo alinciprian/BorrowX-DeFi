@@ -64,7 +64,7 @@ contract depositCollateralTest is Base_Test {
 
         // Compute the amount of collateral liquidator should get after liquidation without bonus
         // We divide the amount of xUSDC liquidator is requested to burn by the price of eth and we get how much eth liquidator is entitled to
-        uint256 ethAmountWithoutBonus = (MAXxUSDCMintAmount / (uint256(price)) * 1e10);
+        uint256 ethAmountWithoutBonus = (MAXxUSDCMintAmount * 1e8) / uint256(price);
         console.log("withouBOnus", ethAmountWithoutBonus);
         // We add the 10% bonus
         uint256 bonusETH = (ethAmountWithoutBonus * Constants.LOAN_LIQUIDATION_DISCOUNT) / Constants.LOAN_PRECISION;
