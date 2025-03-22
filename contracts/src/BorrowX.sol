@@ -213,7 +213,7 @@ contract BorrowX is ReentrancyGuard {
         // The amount of xUSDC minted
         uint256 xUSDCDebt = xusdcMinted[_user];
         // we check if the debt reaches 80% of the usd collateral value
-        return bool(usdCollateralValue * LOAN_LIQUIDATION_THRESHOLD <= xUSDCDebt * LOAN_PRECISION);
+        return bool((usdCollateralValue * LOAN_LIQUIDATION_THRESHOLD / LOAN_PRECISION) <= xUSDCDebt);
     }
 
     /// @dev This functions checks if the minting or withdraw operation will  break Loan-to-value threshold;
