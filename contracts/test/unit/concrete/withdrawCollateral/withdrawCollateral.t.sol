@@ -20,7 +20,7 @@ contract depositCollateralTest is Base_Test {
     function setUp() public virtual override {
         Base_Test.setUp();
 
-        // revertContract is a contract that reverts when receiving ETH
+        // RevertContract is a contract that reverts when receiving ETH
         revertContract = new MockFailedTransfer();
 
         // Bob deposits some collateral into the protocol
@@ -86,9 +86,9 @@ contract depositCollateralTest is Base_Test {
         // Make bob the caller
         vm.startPrank(users.bob);
 
-        // we store bob collateral deposited before withdraw
+        // We store bob collateral deposited before withdraw
         uint256 bobCollateralDepositedBefore = borrowXContract.getUserCollateralDeposited(users.bob);
-        // we store bob ETH balance before
+        // We store bob ETH balance before
         uint256 bobETHBalanceBefore = users.bob.balance;
 
         // Expect the {CollateralRedeemed} event to be emitted
@@ -98,9 +98,9 @@ contract depositCollateralTest is Base_Test {
         // We run the test
         borrowXContract.withdrawCollateral(depositAmount);
 
-        // we store bob collateral deposited after withdraw
+        // We store bob collateral deposited after withdraw
         uint256 bobCollateralDepositedAfter = borrowXContract.getUserCollateralDeposited(users.bob);
-        // we store bob ETH balance after
+        // We store bob ETH balance after
         uint256 bobETHBalanceAfter = users.bob.balance;
 
         // We assert that the storage was updated accordingly
