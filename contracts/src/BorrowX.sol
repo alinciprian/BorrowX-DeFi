@@ -35,7 +35,7 @@ contract BorrowX is ReentrancyGuard {
     //////////////////////
     ///State variables
     //////////////////////
-    xUSDC private immutable i_xusdc;
+    xUSDC public immutable i_xusdc;
 
     uint256 private constant LOAN_TO_VALUE = 50; // 1:2 -> Loan:Value ratio
     uint256 private constant LOAN_LIQUIDATION_DISCOUNT = 10; // 10% discount incentive
@@ -49,8 +49,7 @@ contract BorrowX is ReentrancyGuard {
     mapping(address user => uint256 amountCollateral) private collateralDeposited;
     mapping(address user => uint256 amountMinted) private xusdcMinted;
 
-    address private collateralTokenAddress;
-    address private priceFeedCollateralTokenAddress;
+    address public priceFeedCollateralTokenAddress;
 
     //////////////////////
     ///Events
@@ -102,9 +101,6 @@ contract BorrowX is ReentrancyGuard {
         _checkLoanToValue(_amountToMint, 0);
         xusdcMinted[msg.sender] += _amountToMint;
         bool minted = i_xusdc.mint(msg.sender, _amountToMint);
-        if (!minted) {
-            revert BorrowX__MintFailed();
-        }
 
         emit xUSDCMinted(msg.sender, _amountToMint);
     }
