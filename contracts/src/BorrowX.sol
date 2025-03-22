@@ -271,6 +271,11 @@ contract BorrowX is ReentrancyGuard {
     ///Public view
     //////////////////////
 
+    function getWithdrawAmountAllowed(address _user) public view returns (uint256) {
+        uint256 withdrawAmountAllowed = _withdrawAmountAllowed(_user);
+        return withdrawAmountAllowed;
+    }
+
     function getMintAmountAllowed(address _user) public view returns (uint256) {
         uint256 mintAmountAllowed = _mintAmountAllowed(_user);
         return mintAmountAllowed;
