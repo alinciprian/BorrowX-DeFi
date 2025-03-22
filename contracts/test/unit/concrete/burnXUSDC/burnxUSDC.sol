@@ -11,7 +11,7 @@ import {Errors} from "../../../utils/Errors.sol";
 import {Events} from "../../../utils/Events.sol";
 import {MockFailedTransfer} from "../../../mock/MockFailedTransfer.sol";
 
-contract depositCollateralTest is Base_Test {
+contract burnxUSDCTest is Base_Test {
     uint256 depositAmount = 1 ether;
     /// Ether value from Mock price feed is 2_000 . Given LTV is 50% , max xUSDC mint amount is 1_000 xUSDC
     uint256 MAXxUSDCMintAmount = 1000e18;

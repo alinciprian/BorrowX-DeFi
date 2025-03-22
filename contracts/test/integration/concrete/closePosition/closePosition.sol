@@ -9,7 +9,7 @@ import {xUSDC} from "../../../../src/xUSDC.sol";
 import {BorrowX} from "../../../../src/BorrowX.sol";
 import {MockV3Aggregator} from "../../../mock/MockV3Aggregator.sol";
 
-contract depositCollateralTest is Base_Test {
+contract closePositionTest is Base_Test {
     uint256 depositAmount = 1 ether;
     /// Ether value from Mock price feed is 2_000 . Given LTV is 50% , max xUSDC mint amount is 1_000 xUSDC
     uint256 MAXxUSDCMintAmount = 1000e18;

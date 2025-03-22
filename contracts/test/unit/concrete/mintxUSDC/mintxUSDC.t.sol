@@ -8,7 +8,7 @@ import {xUSDC} from "../../../../src/xUSDC.sol";
 import {BorrowX} from "../../../../src/BorrowX.sol";
 import {MockV3Aggregator} from "../../../mock/MockV3Aggregator.sol";
 
-contract depositCollateralTest is Base_Test {
+contract mintxUSDCTest is Base_Test {
     uint256 depositAmount = 1 ether;
     uint256 xUSDCMintAmount = 900e18;
 
