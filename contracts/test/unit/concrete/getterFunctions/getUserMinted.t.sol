@@ -8,7 +8,7 @@ import {xUSDC} from "../../../../src/xUSDC.sol";
 import {BorrowX} from "../../../../src/BorrowX.sol";
 import {MockV3Aggregator} from "../../../mock/MockV3Aggregator.sol";
 
-contract getUserCollateralDepositTest is Base_Test {
+contract getUserMintedTest is Base_Test {
     uint256 depositAmount = 1 ether;
     uint256 xUSDCMintAmount = 900e18;
 
@@ -18,12 +18,14 @@ contract getUserCollateralDepositTest is Base_Test {
         // Make bob deposit 1 ether
         vm.startPrank(users.bob);
         borrowXContract.depositCollateral{value: depositAmount}();
+        // Make bob mint 500xUSDC
+        borrowXContract.mintxUSDC(500);
     }
 
-    function test_getWithdrawAmountAllowed() public view {
+    function test_getUserMinted() public view {
         // Get the maximum amount allowed to withdraw
-        uint256 bobCollateralDeposited = borrowXContract.getUserCollateralDeposited(users.bob);
-        // We assert that the collateral deposited is 1 ETH
-        assertEq(bobCollateralDeposited, 1e18);
+        uint256 amountUserMinted = borrowXContract.getUserMintedXUSDC(users.bob);
+        // We assert the amount bob minted is 500
+        assertEq(amountUserMinted, 500);
     }
 }
