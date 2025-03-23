@@ -8,9 +8,11 @@ import {Events} from "../../../utils/Events.sol";
 import {xUSDC} from "../../../../src/xUSDC.sol";
 import {BorrowX} from "../../../../src/BorrowX.sol";
 import {MockV3Aggregator} from "../../../mock/MockV3Aggregator.sol";
+import {MadBorrowX} from "../../../mock/MockBorrowXFailedTransfer.sol";
 
 contract depositCollateralTest is Base_Test {
     uint256 depositAmount = 1 ether;
+    MadBorrowX madBorrowX;
 
     function setUp() public virtual override {
         Base_Test.setUp();
@@ -29,6 +31,21 @@ contract depositCollateralTest is Base_Test {
 
         // Run the test
         borrowXContract.depositCollateral{value: 0}();
+
+        vm.stopPrank();
+    }
+
+    function test_deposit_RevertWhen_TransferFails() public {
+        madBorrowX = new MadBorrowX(address(MockV3AggregatorContract), address(xUSDCContract));
+
+        // Make bob the caller of the function
+        vm.startPrank(users.bob);
+
+        // Expect the next call to revert with the {BorrowX__NeedsMoreThanZero} error
+        vm.expectRevert(BorrowX.BorrowX__TransferFailed.selector);
+
+        // Run the test
+        madBorrowX.depositCollateral{value: depositAmount}();
 
         vm.stopPrank();
     }

@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-03-23 14:22:40</td>
+            <td class="headerValue">2025-03-23 16:33:54</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -90,28 +90,28 @@
 <span id="L19"><span class="lineNum">      19</span>                 :             : </span>
 <span id="L20"><span class="lineNum">      20</span>                 :             :     constructor() ERC20(&quot;StableCoinX&quot;, &quot;SCX&quot;) Ownable(msg.sender) {}</span>
 <span id="L21"><span class="lineNum">      21</span>                 :             : </span>
-<span id="L22"><span class="lineNum">      22</span>                 :<span class="tlaGNC">           3 :     function burn(uint256 _amount) public override onlyOwner {</span></span>
-<span id="L23"><span class="lineNum">      23</span>                 :<span class="tlaGNC">           3 :         uint256 balance = balanceOf(msg.sender);</span></span>
-<span id="L24"><span class="lineNum">      24</span>            [<span class="tlaUNC" title="Branch 0 was not executed"> # </span>]:<span class="tlaGNC">           3 :         if (_amount &lt;= 0) {</span></span>
+<span id="L22"><span class="lineNum">      22</span>                 :<span class="tlaGNC">       10004 :     function burn(uint256 _amount) public override onlyOwner {</span></span>
+<span id="L23"><span class="lineNum">      23</span>                 :<span class="tlaGNC">       10004 :         uint256 balance = balanceOf(msg.sender);</span></span>
+<span id="L24"><span class="lineNum">      24</span>            [<span class="tlaUNC" title="Branch 0 was not executed"> # </span>]:<span class="tlaGNC">       10004 :         if (_amount &lt;= 0) {</span></span>
 <span id="L25"><span class="lineNum">      25</span>                 :<span class="tlaUNC">           0 :             revert xUSDC__BalanceMustBeMoreThanZero();</span></span>
 <span id="L26"><span class="lineNum">      26</span>                 :             :         }</span>
 <span id="L27"><span class="lineNum">      27</span>                 :             : </span>
-<span id="L28"><span class="lineNum">      28</span>            [<span class="tlaUNC" title="Branch 0 was not executed"> # </span>]:<span class="tlaGNC">           3 :         if (balance &lt; _amount) {</span></span>
+<span id="L28"><span class="lineNum">      28</span>            [<span class="tlaUNC" title="Branch 0 was not executed"> # </span>]:<span class="tlaGNC">       10004 :         if (balance &lt; _amount) {</span></span>
 <span id="L29"><span class="lineNum">      29</span>                 :<span class="tlaUNC">           0 :             revert xUSDC__BurnAmountExceedsBalance();</span></span>
 <span id="L30"><span class="lineNum">      30</span>                 :             :         }</span>
-<span id="L31"><span class="lineNum">      31</span>                 :<span class="tlaGNC">           3 :         super.burn(_amount);</span></span>
+<span id="L31"><span class="lineNum">      31</span>                 :<span class="tlaGNC">       10004 :         super.burn(_amount);</span></span>
 <span id="L32"><span class="lineNum">      32</span>                 :             :     }</span>
 <span id="L33"><span class="lineNum">      33</span>                 :             : </span>
-<span id="L34"><span class="lineNum">      34</span>                 :<span class="tlaGNC">          38 :     function mint(address _to, uint256 _amount) external onlyOwner returns (bool) {</span></span>
-<span id="L35"><span class="lineNum">      35</span>            [<span class="tlaUNC" title="Branch 0 was not executed"> # </span>]:<span class="tlaGNC">          38 :         if (_to == address(0)) {</span></span>
+<span id="L34"><span class="lineNum">      34</span>                 :<span class="tlaGNC">       30047 :     function mint(address _to, uint256 _amount) external onlyOwner returns (bool) {</span></span>
+<span id="L35"><span class="lineNum">      35</span>            [<span class="tlaUNC" title="Branch 0 was not executed"> # </span>]:<span class="tlaGNC">       30047 :         if (_to == address(0)) {</span></span>
 <span id="L36"><span class="lineNum">      36</span>                 :<span class="tlaUNC">           0 :             revert xUSDC__NotZeroAddress();</span></span>
 <span id="L37"><span class="lineNum">      37</span>                 :             :         }</span>
-<span id="L38"><span class="lineNum">      38</span>            [<span class="tlaUNC" title="Branch 0 was not executed"> # </span>]:<span class="tlaGNC">          38 :         if (_amount &lt; 0) {</span></span>
+<span id="L38"><span class="lineNum">      38</span>            [<span class="tlaUNC" title="Branch 0 was not executed"> # </span>]:<span class="tlaGNC">       30047 :         if (_amount &lt; 0) {</span></span>
 <span id="L39"><span class="lineNum">      39</span>                 :<span class="tlaUNC">           0 :             revert xUSDC__MintAmountIsZero();</span></span>
 <span id="L40"><span class="lineNum">      40</span>                 :             :         }</span>
 <span id="L41"><span class="lineNum">      41</span>                 :             : </span>
-<span id="L42"><span class="lineNum">      42</span>                 :<span class="tlaGNC">          38 :         _mint(_to, _amount);</span></span>
-<span id="L43"><span class="lineNum">      43</span>                 :<span class="tlaGNC">          38 :         return true;</span></span>
+<span id="L42"><span class="lineNum">      42</span>                 :<span class="tlaGNC">       30047 :         _mint(_to, _amount);</span></span>
+<span id="L43"><span class="lineNum">      43</span>                 :<span class="tlaGNC">       30047 :         return true;</span></span>
 <span id="L44"><span class="lineNum">      44</span>                 :             :     }</span>
 <span id="L45"><span class="lineNum">      45</span>                 :             : }</span>
         </pre>
