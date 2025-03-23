@@ -18,19 +18,6 @@ contract depositCollateralTestFuzz is Base_Test {
     ///depositCollateral
     //////////////////////////
 
-    // function test_RevertWhen_DepositAmountIsZero() public {
-    //     // Make bob the caller of the function
-    //     vm.startPrank(users.bob);
-
-    //     // Expect the next call to revert with the {BorrowX__NeedsMoreThanZero} error
-    //     vm.expectRevert(BorrowX.BorrowX__NeedsMoreThanZero.selector);
-
-    //     // Run the test
-    //     borrowXContract.depositCollateral{value: 0}();
-
-    //     vm.stopPrank();
-    // }
-
     function testFuzz_WhenDepositAmountIsNotZero(uint256 depositAmount) public {
         vm.assume(depositAmount > 0);
         vm.deal(users.bob, depositAmount);
