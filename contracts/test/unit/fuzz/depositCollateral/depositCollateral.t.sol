@@ -18,7 +18,7 @@ contract depositCollateralTestFuzz is Base_Test {
     ///depositCollateral
     //////////////////////////
 
-    function testFuzz_WhenDepositAmountIsNotZero(uint256 depositAmount) public {
+    function testFuzz_depositCollateral(uint256 depositAmount) public {
         vm.assume(depositAmount > 0);
         vm.deal(users.bob, depositAmount);
 
