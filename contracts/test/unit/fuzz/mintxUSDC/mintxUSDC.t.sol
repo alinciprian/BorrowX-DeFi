@@ -21,12 +21,14 @@ contract mintxUSDCTestFuzz is Base_Test {
         // We assume the input si valid
         vm.assume(xUSDCMintAmount > 0);
         vm.assume(depositAmount > 0);
-
         // We limit xUSDCMintAmount to a reasonably large amount to prevent the Mock oracle from overflowing
-        vm.assume(xUSDCMintAmount < 1_000_000_000e18);
+        vm.assume(depositAmount < 100_000e18);
+
+        // Deal bob sufficient funds
+        vm.deal(users.bob, depositAmount);
 
         (, int256 price,,,) = MockV3AggregatorContract.latestRoundData();
-        vm.assume(xUSDCMintAmount * 1e9 < (depositAmount * uint256(price)) * 5);
+        vm.assume(xUSDCMintAmount < ((depositAmount * uint256(price)) * 5) / 1e9);
 
         // Make bob caller of the function
         vm.startPrank(users.bob);

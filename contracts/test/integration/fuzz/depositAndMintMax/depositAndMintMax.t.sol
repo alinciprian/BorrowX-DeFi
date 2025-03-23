@@ -22,6 +22,7 @@ contract depositAndMintMaxTestFuzz is Base_Test {
     function testFuzz_depositAndMintMax(uint256 depositAmount) public {
         // We assume the input is valid
         vm.assume(depositAmount > 0);
+        // We assume the deposit amount is less than 100_000 ETH to prevent the oracle from overflowing
         vm.assume(depositAmount < 100_000e18);
 
         // We deal eve sufficient funds
