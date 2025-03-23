@@ -11,12 +11,12 @@ import {Errors} from "../../../utils/Errors.sol";
 import {Events} from "../../../utils/Events.sol";
 import {MockFailedTransfer} from "../../../mock/MockFailedTransfer.sol";
 
-contract withdrawCollateralTest is Base_Test {
+contract withdrawCollateralTestFuzz is Base_Test {
     function setUp() public virtual override {
         Base_Test.setUp();
     }
 
-    function test_withdrawCollateral(uint256 depositAmount, uint256 withdrawAmount) public {
+    function testFuzz_withdrawCollateral(uint256 depositAmount, uint256 withdrawAmount) public {
         // Assume valid input
         vm.assume(depositAmount > 0);
         vm.assume(depositAmount < 100_000e18);
