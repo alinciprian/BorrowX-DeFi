@@ -12,3 +12,7 @@ docs/
 
 # Dotenv file
 .env
+
+# lcov related files
+formatted-lcov.info
+lcov.info
