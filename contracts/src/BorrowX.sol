@@ -100,8 +100,7 @@ contract BorrowX is ReentrancyGuard {
     function mintxUSDC(uint256 _amountToMint) public inputNotZero(_amountToMint) {
         _checkLoanToValue(_amountToMint, 0);
         xusdcMinted[msg.sender] += _amountToMint;
-        bool minted = i_xusdc.mint(msg.sender, _amountToMint);
-
+        i_xusdc.mint(msg.sender, _amountToMint);
         emit xUSDCMinted(msg.sender, _amountToMint);
     }
 
