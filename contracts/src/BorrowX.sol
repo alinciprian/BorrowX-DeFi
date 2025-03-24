@@ -8,7 +8,7 @@ import {OracleLib, AggregatorV3Interface} from "./libraries/OracleLib.sol";
 
 /// @title BorrowX - A borrowing DeFi protocol
 /// @author AlinCiprian
-/// @notice This contract allows users to borrow xUSDC against collateral(wETH); Loan-to-Value will be 50%, meaning that
+/// @notice This contract allows users to borrow xUSDC against collateral(ETH); Loan-to-Value will be 50%, meaning that
 /// users cand borrow half the value that they lock in the contract. Liquidation threshold will be 80% and it is the point where
 /// a position is listed for liquidation. In order to incentivize other users to liquidate the position, the liquidator will receive
 /// 10% discount on the collateral.
