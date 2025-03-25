@@ -30,9 +30,14 @@ export default function Dashboard() {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
 
-  const [userCollateral, setUserCollateral] = useState<BalanceType | null>(
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [collateral, setCollateral] = useState<BalanceType | null>(null);
+  const [borrowed, setBorrowed] = useState<BalanceType | null>(null);
+  const [borrowAllowance, setBorrowAllowance] = useState<BalanceType | null>(
     null
   );
+  const [withdrawAllowance, setWithdrawAllowance] =
+    useState<BalanceType | null>(null);
 
   const PRECISION = 10 ** 18;
 
@@ -40,6 +45,10 @@ export default function Dashboard() {
     formatted: string;
     symbol: string;
   };
+
+  //////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////READ FROM CONTRACT/////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////
 
   /// This function is used to read the amount of collateral deposited from contract
   async function fetchUserCollateralDeposited(address: `0x${string}`) {
@@ -49,15 +58,68 @@ export default function Dashboard() {
       functionName: "getUserCollateralDeposited",
       args: [address],
     })) as bigint;
-    setUserCollateral({
+    setCollateral({
       formatted: (Number(result) / 10 ** 18).toFixed(4), // Convert `bigint` to string with 4 decimals
       symbol: "ETH",
     });
   }
 
+  /// This function is used to read the amount of xUSDC borrowed by the user
+  async function fetchUserBorrowAmount(address: `0x${string}`) {
+    const result: bigint = (await readContract(wagmiConfig, {
+      abi: BorrowXABI,
+      address: "0x52838b5A0ee375618824236c8d03e78d34DE0Adb",
+      functionName: "getUserMintedXUSDC",
+      args: [address],
+    })) as bigint;
+    setBorrowed({
+      formatted: (Number(result) / 10 ** 18).toFixed(4), // Convert `bigint` to string with 4 decimals
+      symbol: "xUSDC",
+    });
+  }
+
+  /// This function is used to read the amount of xUSDC an user is allowed to mint
+  async function fetchUserBorrowAllowance(address: `0x${string}`) {
+    const result: bigint = (await readContract(wagmiConfig, {
+      abi: BorrowXABI,
+      address: "0x52838b5A0ee375618824236c8d03e78d34DE0Adb",
+      functionName: "getMintAmountAllowed",
+      args: [address],
+    })) as bigint;
+    setBorrowAllowance({
+      formatted: (Number(result) / 10 ** 18).toFixed(4), // Convert `bigint` to string with 4 decimals
+      symbol: "xUSDC",
+    });
+  }
+
+  /// This function is used to read the amount of collateral an user is allowed to withdraw given current debt
+  async function fetchUserWithdrawalAllowance(address: `0x${string}`) {
+    const result: bigint = (await readContract(wagmiConfig, {
+      abi: BorrowXABI,
+      address: "0x52838b5A0ee375618824236c8d03e78d34DE0Adb",
+      functionName: "getWithdrawAmountAllowed",
+      args: [address],
+    })) as bigint;
+    setWithdrawAllowance({
+      formatted: (Number(result) / 10 ** 18).toFixed(4), // Convert `bigint` to string with 4 decimals
+      symbol: "ETH",
+    });
+  }
+
+  const fetchUserData = async () => {
+    setIsLoading(true);
+    await Promise.all([
+      fetchUserBorrowAllowance(address!),
+      fetchUserBorrowAmount(address!),
+      fetchUserCollateralDeposited(address!),
+      fetchUserWithdrawalAllowance(address!),
+    ]);
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     if (isConnected) {
-      fetchUserCollateralDeposited(address!);
+      fetchUserData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected]);
@@ -79,15 +141,11 @@ export default function Dashboard() {
             <CardTitle>Collateral Info</CardTitle>
           </CardHeader>
           <CardContent>
-            {Number(userCollateral!.formatted) > 0 ? (
-              <p>
-                {userCollateral!.formatted} {userCollateral!.symbol}
-              </p>
-            ) : (
+            {
               <p className="text-[10px] text-gray-400">
-                No collateral deposited yet
+                {collateral?.formatted} {collateral?.symbol}
               </p>
-            )}
+            }
           </CardContent>
         </Card>
 
@@ -96,7 +154,9 @@ export default function Dashboard() {
             <CardTitle> Your borrows </CardTitle>
           </CardHeader>
           <CardContent className="text-[10px] text-gray-400">
-            Nothing borrowed yet
+            <p>
+              Currently borrowed: {borrowed?.formatted} {borrowed?.symbol}
+            </p>
           </CardContent>
         </Card>
 
@@ -116,7 +176,8 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <p className="text-[10px] text-gray-400">
-              Insufficient collateral deposited
+              You can currently borrow {borrowAllowance?.formatted}{" "}
+              {borrowAllowance?.symbol}
             </p>
           </CardContent>
         </Card>
