@@ -23,18 +23,16 @@ import { wagmiConfig } from "../components/Providers";
 import { useState, useEffect } from "react";
 import { BorrowXABI } from "../config/BorrowXABI";
 import { xusdcABI } from "../config/xusdcABI";
+import { InputWithButton } from "./InputWithButton";
+import { metisGoerli } from "wagmi/chains";
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
 
-  const [balanceSTK, setBalanceSTK] = useState<BalanceType | null>(null);
-  const [balancedUSDC, setBalancedUSDC] = useState<BalanceType | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [stakingAmount, setStakingAmount] = useState<number>(0);
-  const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
-  const [amountstaked, setAmountStaked] = useState<bigint>(0n);
-  const [rewardAmount, setRewardAmount] = useState<bigint>(0n);
+  const [userCollateral, setUserCollateral] = useState<BalanceType | null>(
+    null
+  );
 
   const PRECISION = 10 ** 18;
 
@@ -43,12 +41,23 @@ export default function Dashboard() {
     symbol: string;
   };
 
-  function handleMax() {
-    setWithdrawAmount(Number(amountstaked) / PRECISION);
+  /// This function is used to read the amount of collateral deposited from contract
+  async function fetchUserCollateralDeposited(address: `0x${string}`) {
+    const result: bigint = (await readContract(wagmiConfig, {
+      abi: BorrowXABI,
+      address: "0x52838b5A0ee375618824236c8d03e78d34DE0Adb",
+      functionName: "getUserCollateralDeposited",
+      args: [address],
+    })) as bigint;
+    setUserCollateral({
+      formatted: (Number(result) / 10 ** 18).toFixed(4), // Convert `bigint` to string with 4 decimals
+      symbol: "ETH",
+    });
   }
 
   useEffect(() => {
     if (isConnected) {
+      fetchUserCollateralDeposited(address!);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected]);
@@ -69,8 +78,16 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle>Collateral Info</CardTitle>
           </CardHeader>
-          <CardContent className="text-[10px] text-gray-400">
-            No collateral deposited yet
+          <CardContent>
+            {Number(userCollateral!.formatted) > 0 ? (
+              <p>
+                {userCollateral!.formatted} {userCollateral!.symbol}
+              </p>
+            ) : (
+              <p className="text-[10px] text-gray-400">
+                No collateral deposited yet
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -87,14 +104,21 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle>Deposit Collateral</CardTitle>
           </CardHeader>
-          <CardContent></CardContent>
+          <CardContent className="flex w-full max-w-sm items-center space-x-2">
+            <Input />
+            <Button>Deposit</Button>
+          </CardContent>
         </Card>
 
         <Card className="w-[400px] bg-gray-800 text-white">
           <CardHeader>
             <CardTitle>Borrow xUSDC</CardTitle>
           </CardHeader>
-          <CardContent></CardContent>
+          <CardContent>
+            <p className="text-[10px] text-gray-400">
+              Insufficient collateral deposited
+            </p>
+          </CardContent>
         </Card>
       </div>
     </div>
