@@ -10,7 +10,7 @@ const Balance = () => {
   if (isError) return <div>Error fetching balance</div>;
   return (
     <>
-      <h2>Your balance</h2>
+      <h2>Your balance:</h2>
       {isLoading && <p>fetching balance...</p>}
       {isError && <p>Error fetching balance.</p>}
       {data && (
