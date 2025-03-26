@@ -151,11 +151,24 @@ export default function Dashboard() {
 
         <Card className="w-[400px] bg-gray-800 text-white">
           <CardHeader>
-            <CardTitle> Your borrows </CardTitle>
+            <CardTitle> Manage debt </CardTitle>
           </CardHeader>
           <CardContent className="text-[10px] text-gray-400">
-            <p>
-              Currently borrowed: {borrowed?.formatted} {borrowed?.symbol}
+            <p className="mb-1">
+              Your current debt: {borrowed?.formatted} {borrowed?.symbol}.
+            </p>
+
+            <p className="flex w-full max-w-sm items-center space-x-2">
+              <Input type="text" />
+              <Button>Pay debt</Button>
+              <Button>Max</Button>
+            </p>
+            <p className="mt-1 flex w-full max-w-sm items-center space-x-2">
+              <p>
+                Close position if you wish to pay the entire debt amount and
+                withdraw all collateral.
+              </p>
+              <Button>Close Position</Button>
             </p>
           </CardContent>
         </Card>
@@ -165,14 +178,19 @@ export default function Dashboard() {
             <CardTitle>Collateral management</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="flex w-full max-w-sm items-center space-x-2">
+            <p className="mb-1 flex w-full max-w-sm items-center space-x-2">
               <Input />
               <Button>Deposit</Button>
             </p>
+
             <p className="flex w-full max-w-sm items-center space-x-2">
               <Input />
               <Button>Withdraw</Button>
               <Button>Max</Button>
+            </p>
+            <p className=" mb-1 text-[10px] text-gray-400">
+              You can withdraw {withdrawAllowance?.formatted}{" "}
+              {withdrawAllowance?.symbol}.
             </p>
           </CardContent>
         </Card>
@@ -184,11 +202,11 @@ export default function Dashboard() {
           <CardContent>
             <p className=" mb-1 text-[10px] text-gray-400">
               You can currently borrow {borrowAllowance?.formatted}{" "}
-              {borrowAllowance?.symbol}
+              {borrowAllowance?.symbol}.
             </p>
             <p className="flex w-full max-w-sm items-center space-x-2">
               <Input />
-              <Button>Mint</Button>
+              <Button>Borrow</Button>
               <Button>Max</Button>
             </p>
           </CardContent>
