@@ -210,6 +210,16 @@ export default function Dashboard({
   async function handlePayDebt(amount: number) {
     try {
       setIsLoading(true);
+      const txHashApprove = await writeContract(wagmiConfig, {
+        abi: xusdcABI,
+        address: "0x45062607281c2f9E3931D227A1132B818B906110",
+        functionName: "approve",
+        args: [
+          "0x8D55903A900776A336296F6F44de9C0cd4F87127",
+          BigInt(amount * PRECISION),
+        ],
+      });
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHashApprove });
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
         address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
