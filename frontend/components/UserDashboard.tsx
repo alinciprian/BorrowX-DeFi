@@ -40,6 +40,7 @@ export default function Dashboard() {
     useState<BalanceType | null>(null);
 
   const [inputCollateral, setInputCollateral] = useState<number>(0);
+  const [inputWithdraw, setInputWithdraw] = useState<number>(0);
 
   const PRECISION = 10 ** 18;
 
@@ -124,6 +125,7 @@ export default function Dashboard() {
   //////////////////////////////////////////////////////////////////////////////////////
 
   async function handleDepositCollateral() {
+    setIsLoading(true);
     const txHash = await writeContract(wagmiConfig, {
       abi: BorrowXABI,
       address: "0x52838b5A0ee375618824236c8d03e78d34DE0Adb",
@@ -132,6 +134,22 @@ export default function Dashboard() {
     });
     await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
     fetchUserData();
+    setInputCollateral(0);
+    setIsLoading(false);
+  }
+
+  async function handleCollateralWithdrawal(amount: number) {
+    setIsLoading(true);
+    const txHash = await writeContract(wagmiConfig, {
+      abi: BorrowXABI,
+      address: "0x52838b5A0ee375618824236c8d03e78d34DE0Adb",
+      functionName: "withdrawCollateral",
+      args: [BigInt(inputWithdraw * PRECISION)],
+    });
+    await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
+    fetchUserData();
+    setInputWithdraw(0);
+    setIsLoading(false);
   }
 
   useEffect(() => {
@@ -177,16 +195,16 @@ export default function Dashboard() {
               </p>
 
               <p className="flex w-full max-w-sm items-center space-x-2">
-                <Input type="text" />
-                <Button>Pay debt</Button>
-                <Button>Max</Button>
+                <Input type="text" disabled={isLoading} />
+                <Button disabled={isLoading}>Pay debt</Button>
+                <Button disabled={isLoading}>Max</Button>
               </p>
               <div className="mt-1 flex w-full max-w-sm items-center space-x-2">
                 <p>
                   Close position if you wish to pay the entire debt amount and
                   withdraw all collateral.
                 </p>
-                <Button>Close Position</Button>
+                <Button disabled={isLoading}>Close Position</Button>
               </div>
             </CardContent>
           </Card>
@@ -198,21 +216,44 @@ export default function Dashboard() {
             <CardContent>
               <p className="mb-1 flex w-full max-w-sm items-center space-x-2">
                 <Input
+                  disabled={isLoading}
                   type="number"
                   value={inputCollateral}
                   onChange={(e) =>
                     setInputCollateral(parseFloat(e.target.value) || 0)
                   }
                 />
-                <Button onClick={() => handleDepositCollateral()}>
+                <Button
+                  onClick={() => handleDepositCollateral()}
+                  disabled={isLoading}
+                >
                   Deposit
                 </Button>
               </p>
 
               <p className="flex w-full max-w-sm items-center space-x-2">
-                <Input />
-                <Button>Withdraw</Button>
-                <Button>Max</Button>
+                <Input
+                  type="number"
+                  value={inputWithdraw}
+                  onChange={(e) =>
+                    setInputWithdraw(parseFloat(e.target.value) || 0)
+                  }
+                  disabled={isLoading}
+                />
+                <Button
+                  onClick={() => handleCollateralWithdrawal(inputWithdraw)}
+                  disabled={isLoading}
+                >
+                  Withdraw
+                </Button>
+                <Button
+                  disabled={isLoading}
+                  onClick={() =>
+                    setInputWithdraw(Number(withdrawAllowance?.formatted))
+                  }
+                >
+                  Max
+                </Button>
               </p>
               <p className=" mb-1 text-[10px] text-gray-400">
                 You can withdraw {withdrawAllowance?.formatted}{" "}
@@ -231,9 +272,9 @@ export default function Dashboard() {
                 {borrowAllowance?.symbol}.
               </p>
               <p className="flex w-full max-w-sm items-center space-x-2">
-                <Input />
-                <Button>Borrow</Button>
-                <Button>Max</Button>
+                <Input disabled={isLoading} />
+                <Button disabled={isLoading}>Borrow</Button>
+                <Button disabled={isLoading}>Max</Button>
               </p>
             </CardContent>
           </Card>

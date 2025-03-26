@@ -253,6 +253,7 @@ contract BorrowX is ReentrancyGuard {
     function _withdrawAmountAllowed(address _user) internal view returns (uint256) {
         // The amount of USDC minted;
         uint256 currentlyMinted = xusdcMinted[_user];
+        // If user did not mint any xUSDC, he can withdraw the full amount of collateral
         if (currentlyMinted == 0) {
             return collateralDeposited[_user];
         }
