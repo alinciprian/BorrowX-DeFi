@@ -85,7 +85,7 @@ export default function Dashboard() {
   async function fetchUserBorrowAllowance(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x52838b5A0ee375618824236c8d03e78d34DE0Adb",
+      address: "0x6ea5709FBc4880680B1532964aeA637D06E18d1B",
       functionName: "getMintAmountAllowed",
       args: [address],
     })) as bigint;
@@ -99,7 +99,7 @@ export default function Dashboard() {
   async function fetchUserWithdrawalAllowance(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x52838b5A0ee375618824236c8d03e78d34DE0Adb",
+      address: "0x6ea5709FBc4880680B1532964aeA637D06E18d1B",
       functionName: "getWithdrawAmountAllowed",
       args: [address],
     })) as bigint;
@@ -124,6 +124,7 @@ export default function Dashboard() {
   ///////////////////////Write to contract//////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////
 
+  // Allow user to deposit collateral
   async function handleDepositCollateral() {
     setIsLoading(true);
     const txHash = await writeContract(wagmiConfig, {
@@ -138,6 +139,7 @@ export default function Dashboard() {
     setIsLoading(false);
   }
 
+  // Allow user to withdraw collateral
   async function handleCollateralWithdrawal(amount: number) {
     setIsLoading(true);
     const txHash = await writeContract(wagmiConfig, {
@@ -163,7 +165,6 @@ export default function Dashboard() {
     <div>
       <div className="flex flex-col items-center justify-center h-screen bg-black text-white relative">
         <div className="grid grid-cols-2 gap-2 scale-150 relative">
-          {/* User Balance - Positioned Above the First Card */}
           <div className="absolute -top-15 left-2 text-[10px] font-semibold">
             <p className="text-gray-400">Net worth:</p>
             <div className="flex items-center text-white">
