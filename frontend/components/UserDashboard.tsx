@@ -26,11 +26,16 @@ import { xusdcABI } from "../config/xusdcABI";
 import { InputWithButton } from "./InputWithButton";
 import { metisGoerli } from "wagmi/chains";
 
-export default function Dashboard() {
+export default function Dashboard({
+  isLoading,
+  setIsLoading,
+}: {
+  isLoading: boolean;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [collateral, setCollateral] = useState<BalanceType | null>(null);
   const [borrowed, setBorrowed] = useState<BalanceType | null>(null);
   const [borrowAllowance, setBorrowAllowance] = useState<BalanceType | null>(
@@ -57,7 +62,7 @@ export default function Dashboard() {
   async function fetchUserCollateralDeposited(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x52838b5A0ee375618824236c8d03e78d34DE0Adb",
+      address: "0x6ea5709FBc4880680B1532964aeA637D06E18d1B",
       functionName: "getUserCollateralDeposited",
       args: [address],
     })) as bigint;
@@ -71,7 +76,7 @@ export default function Dashboard() {
   async function fetchUserBorrowAmount(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x52838b5A0ee375618824236c8d03e78d34DE0Adb",
+      address: "0x6ea5709FBc4880680B1532964aeA637D06E18d1B",
       functionName: "getUserMintedXUSDC",
       args: [address],
     })) as bigint;
@@ -126,32 +131,42 @@ export default function Dashboard() {
 
   // Allow user to deposit collateral
   async function handleDepositCollateral() {
-    setIsLoading(true);
-    const txHash = await writeContract(wagmiConfig, {
-      abi: BorrowXABI,
-      address: "0x52838b5A0ee375618824236c8d03e78d34DE0Adb",
-      functionName: "depositCollateral",
-      value: BigInt(inputCollateral * PRECISION),
-    });
-    await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
-    fetchUserData();
-    setInputCollateral(0);
-    setIsLoading(false);
+    try {
+      setIsLoading(true);
+      const txHash = await writeContract(wagmiConfig, {
+        abi: BorrowXABI,
+        address: "0x6ea5709FBc4880680B1532964aeA637D06E18d1B",
+        functionName: "depositCollateral",
+        value: BigInt(inputCollateral * PRECISION),
+      });
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
+      fetchUserData();
+      setInputCollateral(0);
+      setIsLoading(false);
+    } catch (error) {
+      console.log(error);
+      setIsLoading(false);
+    }
   }
 
   // Allow user to withdraw collateral
   async function handleCollateralWithdrawal(amount: number) {
-    setIsLoading(true);
-    const txHash = await writeContract(wagmiConfig, {
-      abi: BorrowXABI,
-      address: "0x52838b5A0ee375618824236c8d03e78d34DE0Adb",
-      functionName: "withdrawCollateral",
-      args: [BigInt(inputWithdraw * PRECISION)],
-    });
-    await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
-    fetchUserData();
-    setInputWithdraw(0);
-    setIsLoading(false);
+    try {
+      setIsLoading(true);
+      const txHash = await writeContract(wagmiConfig, {
+        abi: BorrowXABI,
+        address: "0x6ea5709FBc4880680B1532964aeA637D06E18d1B",
+        functionName: "withdrawCollateral",
+        args: [BigInt(inputWithdraw * PRECISION)],
+      });
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
+      fetchUserData();
+      setInputWithdraw(0);
+      setIsLoading(false);
+    } catch (error) {
+      console.log(error);
+      setIsLoading(false);
+    }
   }
 
   useEffect(() => {

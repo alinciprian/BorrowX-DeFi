@@ -1,6 +1,6 @@
 import { useAccount, useDisconnect } from "wagmi";
 
-export default function Navbar() {
+export default function Navbar({ isLoading }: { isLoading: boolean }) {
   const { disconnect } = useDisconnect();
   const { address } = useAccount();
 
@@ -28,8 +28,13 @@ export default function Navbar() {
       <div className="flex items-center space-x-4">
         <span className="text-gray-400">{shortenAddress(address!)}</span>
         <button
-          className="bg-black hover:bg-red-600 text-white px-4 py-2 rounded-lg"
+          className={
+            isLoading
+              ? "bg-gray-400  text-white px-4 py-2 rounded-lg"
+              : "bg-black hover:bg-red-600 text-white px-4 py-2 rounded-lg"
+          }
           onClick={() => disconnect()}
+          disabled={isLoading}
         >
           Disconnect
         </button>
