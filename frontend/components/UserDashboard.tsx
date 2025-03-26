@@ -132,7 +132,7 @@ export default function Dashboard({
   }
 
   const fetchUserData = async () => {
-    setIsLoading(true);
+    //setIsLoading(true);
     await Promise.all([
       fetchxUSDCBalance(),
       fetchUserBorrowAllowance(address!),

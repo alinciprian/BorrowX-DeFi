@@ -264,6 +264,10 @@ contract BorrowX is ReentrancyGuard {
         uint256 userCollateral = collateralDeposited[_user];
         // the difference between 50% of token collateral and the token value of xUSDC minted can be withdrawn without breaking LTV;
         uint256 tokenAmountToWithdraw = (userCollateral * LOAN_TO_VALUE / LOAN_PRECISION) - tokenAmountOfxUSDCMinted;
+        if (userCollateral * LOAN_TO_VALUE / LOAN_PRECISION < tokenAmountOfxUSDCMinted) {
+            return 0;
+        }
+
         return (tokenAmountToWithdraw);
     }
 
