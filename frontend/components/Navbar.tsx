@@ -13,7 +13,6 @@ export default function Navbar({ isLoading }: { isLoading: boolean }) {
       {/* Left Section: Logo + Links */}
       <div className="flex items-center space-x-6">
         {/* Logo */}
-        <img src="./logo.png" alt="Logo" className="h-10 w-10" />
 
         {/* Navigation Links */}
         <a href="#" className="hover:text-gray-300">

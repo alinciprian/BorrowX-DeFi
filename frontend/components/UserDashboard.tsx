@@ -47,6 +47,8 @@ export default function Dashboard({
 
   const [inputCollateral, setInputCollateral] = useState<number>(0);
   const [inputWithdraw, setInputWithdraw] = useState<number>(0);
+  const [inputBorrow, setInputBorrow] = useState<number>(0);
+  const [inputPayDebt, setInputPayDebt] = useState<number>(0);
 
   const PRECISION = 10 ** 18;
 
@@ -64,7 +66,7 @@ export default function Dashboard({
     try {
       const balancexUSDC = await getBalance(wagmiConfig, {
         address: address!,
-        token: "0x36B241d9A194E284ffd5D54065d486fCD6FE113f",
+        token: "0x45062607281c2f9E3931D227A1132B818B906110",
       });
 
       setxusdcBalance(balancexUSDC);
@@ -77,7 +79,7 @@ export default function Dashboard({
   async function fetchUserCollateralDeposited(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x0A78d1413607238A13d6005827549b760E92Cab8",
+      address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
       functionName: "getUserCollateralDeposited",
       args: [address],
     })) as bigint;
@@ -91,7 +93,7 @@ export default function Dashboard({
   async function fetchUserBorrowAmount(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x0A78d1413607238A13d6005827549b760E92Cab8",
+      address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
       functionName: "getUserMintedXUSDC",
       args: [address],
     })) as bigint;
@@ -105,7 +107,7 @@ export default function Dashboard({
   async function fetchUserBorrowAllowance(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x0A78d1413607238A13d6005827549b760E92Cab8",
+      address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
       functionName: "getMintAmountAllowed",
       args: [address],
     })) as bigint;
@@ -119,7 +121,7 @@ export default function Dashboard({
   async function fetchUserWithdrawalAllowance(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x0A78d1413607238A13d6005827549b760E92Cab8",
+      address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
       functionName: "getWithdrawAmountAllowed",
       args: [address],
     })) as bigint;
@@ -151,7 +153,7 @@ export default function Dashboard({
       setIsLoading(true);
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x0A78d1413607238A13d6005827549b760E92Cab8",
+        address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
         functionName: "depositCollateral",
         value: BigInt(inputCollateral * PRECISION),
       });
@@ -171,13 +173,52 @@ export default function Dashboard({
       setIsLoading(true);
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x0A78d1413607238A13d6005827549b760E92Cab8",
+        address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
         functionName: "withdrawCollateral",
-        args: [BigInt(inputWithdraw * PRECISION)],
+        args: [BigInt(amount * PRECISION)],
       });
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
       fetchUserData();
       setInputWithdraw(0);
+      setIsLoading(false);
+    } catch (error) {
+      console.log(error);
+      setIsLoading(false);
+    }
+  }
+
+  // Allow user to borrow funds
+  async function handleBorrow(amount: number) {
+    try {
+      setIsLoading(true);
+      const txHash = await writeContract(wagmiConfig, {
+        abi: BorrowXABI,
+        address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
+        functionName: "mintxUSDC",
+        args: [BigInt(amount * PRECISION)],
+      });
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
+      fetchUserData();
+      setInputBorrow(0);
+      setIsLoading(false);
+    } catch (error) {
+      console.log(error);
+      setIsLoading(false);
+    }
+  }
+
+  async function handlePayDebt(amount: number) {
+    try {
+      setIsLoading(true);
+      const txHash = await writeContract(wagmiConfig, {
+        abi: BorrowXABI,
+        address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
+        functionName: "burnxUSDC",
+        args: [BigInt(amount * PRECISION)],
+      });
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
+      fetchUserData();
+      setInputBorrow(0);
       setIsLoading(false);
     } catch (error) {
       console.log(error);
@@ -200,13 +241,13 @@ export default function Dashboard({
             <p className="text-gray-400">Net worth:</p>
             <div className="flex items-center text-white">
               <p className="text-gray-400">$</p>
-              <p>0</p>
+              <p></p>
             </div>
           </div>
 
           <Card className="w-[400px] bg-gray-800 text-white">
             <CardHeader>
-              <CardTitle>Collateral Info</CardTitle>
+              <CardTitle>Your stats</CardTitle>
             </CardHeader>
             <CardContent>
               {
@@ -232,9 +273,24 @@ export default function Dashboard({
               </p>
 
               <p className="flex w-full max-w-sm items-center space-x-2">
-                <Input type="text" disabled={isLoading} />
-                <Button disabled={isLoading}>Pay debt</Button>
-                <Button disabled={isLoading}>Max</Button>
+                <Input
+                  type="number"
+                  disabled={isLoading}
+                  value={inputPayDebt}
+                  onChange={(e) => setInputPayDebt(parseFloat(e.target.value))}
+                />
+                <Button
+                  disabled={isLoading}
+                  onClick={() => handlePayDebt(inputPayDebt)}
+                >
+                  Pay debt
+                </Button>
+                <Button
+                  disabled={isLoading}
+                  onClick={() => setInputPayDebt(Number(borrowed?.formatted))}
+                >
+                  Max
+                </Button>
               </p>
               <div className="mt-1 flex w-full max-w-sm items-center space-x-2">
                 <p>
@@ -271,6 +327,7 @@ export default function Dashboard({
               <p className="flex w-full max-w-sm items-center space-x-2">
                 <Input
                   type="number"
+                  min="0"
                   value={inputWithdraw}
                   onChange={(e) =>
                     setInputWithdraw(parseFloat(e.target.value) || 0)
@@ -292,7 +349,7 @@ export default function Dashboard({
                   Max
                 </Button>
               </p>
-              <p className=" mb-1 text-[10px] text-gray-400">
+              <p className=" mt-1 text-[10px] text-gray-400">
                 You can withdraw {withdrawAllowance?.formatted}{" "}
                 {withdrawAllowance?.symbol}.
               </p>
@@ -309,9 +366,28 @@ export default function Dashboard({
                 {borrowAllowance?.symbol}.
               </p>
               <p className="flex w-full max-w-sm items-center space-x-2">
-                <Input disabled={isLoading} />
-                <Button disabled={isLoading}>Borrow</Button>
-                <Button disabled={isLoading}>Max</Button>
+                <Input
+                  type="number"
+                  value={inputBorrow}
+                  onChange={(e) =>
+                    setInputBorrow(parseFloat(e.target.value) || 0)
+                  }
+                  disabled={isLoading}
+                />
+                <Button
+                  disabled={isLoading}
+                  onClick={() => handleBorrow(inputBorrow)}
+                >
+                  Borrow
+                </Button>
+                <Button
+                  disabled={isLoading}
+                  onClick={() =>
+                    setInputBorrow(Number(borrowAllowance?.formatted))
+                  }
+                >
+                  Max
+                </Button>
               </p>
             </CardContent>
           </Card>

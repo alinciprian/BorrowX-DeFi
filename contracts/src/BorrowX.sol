@@ -246,6 +246,7 @@ contract BorrowX is ReentrancyGuard {
         uint256 usdCollateralValue = _getUsdValueFromToken(collateralDeposited[_user]);
         uint256 maxUSDCLoanToValue = (usdCollateralValue * LOAN_TO_VALUE) / LOAN_PRECISION;
         uint256 currentlyMinted = xusdcMinted[_user];
+        if (currentlyMinted > maxUSDCLoanToValue) return 0;
         return (maxUSDCLoanToValue - currentlyMinted);
     }
 
