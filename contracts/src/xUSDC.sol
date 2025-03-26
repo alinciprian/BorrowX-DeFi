@@ -17,7 +17,7 @@ contract xUSDC is ERC20Burnable, Ownable {
     error xUSDC__NotZeroAddress();
     error xUSDC__MintAmountIsZero();
 
-    constructor() ERC20("StableCoinX", "SCX") Ownable(msg.sender) {}
+    constructor() ERC20("StableCoinX", "xUSDC") Ownable(msg.sender) {}
 
     function burn(uint256 _amount) public override onlyOwner {
         uint256 balance = balanceOf(msg.sender);

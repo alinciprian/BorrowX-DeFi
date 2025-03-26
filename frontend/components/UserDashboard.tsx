@@ -43,6 +43,7 @@ export default function Dashboard({
   );
   const [withdrawAllowance, setWithdrawAllowance] =
     useState<BalanceType | null>(null);
+  const [xusdcBalance, setxusdcBalance] = useState<BalanceType | null>(null);
 
   const [inputCollateral, setInputCollateral] = useState<number>(0);
   const [inputWithdraw, setInputWithdraw] = useState<number>(0);
@@ -58,11 +59,25 @@ export default function Dashboard({
   ///////////////////////READ FROM CONTRACT/////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////
 
+  /// This function is used get the xUSDC balance of the
+  async function fetchxUSDCBalance() {
+    try {
+      const balancexUSDC = await getBalance(wagmiConfig, {
+        address: address!,
+        token: "0x36B241d9A194E284ffd5D54065d486fCD6FE113f",
+      });
+
+      setxusdcBalance(balancexUSDC);
+    } catch (error) {
+      console.log("Error fetching xUSDC balance:", error);
+    }
+  }
+
   /// This function is used to read the amount of collateral deposited from contract
   async function fetchUserCollateralDeposited(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x6ea5709FBc4880680B1532964aeA637D06E18d1B",
+      address: "0x0A78d1413607238A13d6005827549b760E92Cab8",
       functionName: "getUserCollateralDeposited",
       args: [address],
     })) as bigint;
@@ -76,7 +91,7 @@ export default function Dashboard({
   async function fetchUserBorrowAmount(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x6ea5709FBc4880680B1532964aeA637D06E18d1B",
+      address: "0x0A78d1413607238A13d6005827549b760E92Cab8",
       functionName: "getUserMintedXUSDC",
       args: [address],
     })) as bigint;
@@ -90,7 +105,7 @@ export default function Dashboard({
   async function fetchUserBorrowAllowance(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x6ea5709FBc4880680B1532964aeA637D06E18d1B",
+      address: "0x0A78d1413607238A13d6005827549b760E92Cab8",
       functionName: "getMintAmountAllowed",
       args: [address],
     })) as bigint;
@@ -104,7 +119,7 @@ export default function Dashboard({
   async function fetchUserWithdrawalAllowance(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x6ea5709FBc4880680B1532964aeA637D06E18d1B",
+      address: "0x0A78d1413607238A13d6005827549b760E92Cab8",
       functionName: "getWithdrawAmountAllowed",
       args: [address],
     })) as bigint;
@@ -117,6 +132,7 @@ export default function Dashboard({
   const fetchUserData = async () => {
     setIsLoading(true);
     await Promise.all([
+      fetchxUSDCBalance(),
       fetchUserBorrowAllowance(address!),
       fetchUserBorrowAmount(address!),
       fetchUserCollateralDeposited(address!),
@@ -135,7 +151,7 @@ export default function Dashboard({
       setIsLoading(true);
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x6ea5709FBc4880680B1532964aeA637D06E18d1B",
+        address: "0x0A78d1413607238A13d6005827549b760E92Cab8",
         functionName: "depositCollateral",
         value: BigInt(inputCollateral * PRECISION),
       });
@@ -155,7 +171,7 @@ export default function Dashboard({
       setIsLoading(true);
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x6ea5709FBc4880680B1532964aeA637D06E18d1B",
+        address: "0x0A78d1413607238A13d6005827549b760E92Cab8",
         functionName: "withdrawCollateral",
         args: [BigInt(inputWithdraw * PRECISION)],
       });
@@ -183,7 +199,7 @@ export default function Dashboard({
           <div className="absolute -top-15 left-2 text-[10px] font-semibold">
             <p className="text-gray-400">Net worth:</p>
             <div className="flex items-center text-white">
-              <p className="text-gray-400">$ </p>
+              <p className="text-gray-400">$</p>
               <p>0</p>
             </div>
           </div>
@@ -196,6 +212,11 @@ export default function Dashboard({
               {
                 <p className="text-[10px] text-gray-400">
                   {collateral?.formatted} {collateral?.symbol}
+                </p>
+              }
+              {
+                <p className="text-[10px] text-gray-400">
+                  {xusdcBalance?.formatted} {xusdcBalance?.symbol}
                 </p>
               }
             </CardContent>
