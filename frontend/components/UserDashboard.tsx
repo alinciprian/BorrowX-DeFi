@@ -162,11 +162,18 @@ export default function Dashboard() {
 
         <Card className="w-[400px] bg-gray-800 text-white">
           <CardHeader>
-            <CardTitle>Deposit Collateral</CardTitle>
+            <CardTitle>Collateral management</CardTitle>
           </CardHeader>
-          <CardContent className="flex w-full max-w-sm items-center space-x-2">
-            <Input />
-            <Button>Deposit</Button>
+          <CardContent>
+            <p className="flex w-full max-w-sm items-center space-x-2">
+              <Input />
+              <Button>Deposit</Button>
+            </p>
+            <p className="flex w-full max-w-sm items-center space-x-2">
+              <Input />
+              <Button>Withdraw</Button>
+              <Button>Max</Button>
+            </p>
           </CardContent>
         </Card>
 
@@ -175,9 +182,14 @@ export default function Dashboard() {
             <CardTitle>Borrow xUSDC</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-[10px] text-gray-400">
+            <p className=" mb-1 text-[10px] text-gray-400">
               You can currently borrow {borrowAllowance?.formatted}{" "}
               {borrowAllowance?.symbol}
+            </p>
+            <p className="flex w-full max-w-sm items-center space-x-2">
+              <Input />
+              <Button>Mint</Button>
+              <Button>Max</Button>
             </p>
           </CardContent>
         </Card>
