@@ -39,16 +39,14 @@ export default function Dashboard() {
   const [withdrawAllowance, setWithdrawAllowance] =
     useState<BalanceType | null>(null);
 
+  const [inputCollateral, setInputCollateral] = useState<number>(0);
+
   const PRECISION = 10 ** 18;
 
   type BalanceType = {
     formatted: string;
     symbol: string;
   };
-
-  function shortenAddress(address: `0x${string}`) {
-    return `${address.slice(0, 4)}...${address.slice(-4)}`;
-  }
 
   //////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////READ FROM CONTRACT/////////////////////////////////////////////
@@ -121,6 +119,21 @@ export default function Dashboard() {
     setIsLoading(false);
   };
 
+  //////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////Write to contract//////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////
+
+  async function handleDepositCollateral() {
+    const txHash = await writeContract(wagmiConfig, {
+      abi: BorrowXABI,
+      address: "0x52838b5A0ee375618824236c8d03e78d34DE0Adb",
+      functionName: "depositCollateral",
+      value: BigInt(inputCollateral * PRECISION),
+    });
+    await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
+    fetchUserData();
+  }
+
   useEffect(() => {
     if (isConnected) {
       fetchUserData();
@@ -130,41 +143,15 @@ export default function Dashboard() {
 
   return (
     <div>
-      <nav className="bg-gray-800 text-white p-4 flex justify-between items-center">
-        {/* Left Section: Logo + Links */}
-        <div className="flex items-center space-x-6">
-          {/* Logo */}
-          <img src="/logo.png" alt="Logo" className="h-10 w-10" />
-
-          {/* Navigation Links */}
-          <a href="#" className="hover:text-gray-300">
-            Home
-          </a>
-          <a href="#" className="hover:text-gray-300">
-            Liquidation
-          </a>
-        </div>
-
-        {/* Right Section: Wallet Address + Disconnect Button */}
-        <div className="flex items-center space-x-4">
-          <span className="text-gray-400">{shortenAddress(address!)}</span>
-          <button
-            className="bg-black hover:bg-red-600 text-white px-4 py-2 rounded-lg"
-            onClick={() => disconnect}
-          >
-            Disconnect
-          </button>
-        </div>
-      </nav>
       <div className="flex flex-col items-center justify-center h-screen bg-black text-white relative">
         <div className="grid grid-cols-2 gap-2 scale-150 relative">
           {/* User Balance - Positioned Above the First Card */}
           <div className="absolute -top-15 left-2 text-[10px] font-semibold">
             <p className="text-gray-400">Net worth:</p>
-            <p className="flex items-center text-white">
+            <div className="flex items-center text-white">
               <p className="text-gray-400">$ </p>
               <p>0</p>
-            </p>
+            </div>
           </div>
 
           <Card className="w-[400px] bg-gray-800 text-white">
@@ -194,13 +181,13 @@ export default function Dashboard() {
                 <Button>Pay debt</Button>
                 <Button>Max</Button>
               </p>
-              <p className="mt-1 flex w-full max-w-sm items-center space-x-2">
+              <div className="mt-1 flex w-full max-w-sm items-center space-x-2">
                 <p>
                   Close position if you wish to pay the entire debt amount and
                   withdraw all collateral.
                 </p>
                 <Button>Close Position</Button>
-              </p>
+              </div>
             </CardContent>
           </Card>
 
@@ -210,8 +197,16 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <p className="mb-1 flex w-full max-w-sm items-center space-x-2">
-                <Input />
-                <Button>Deposit</Button>
+                <Input
+                  type="number"
+                  value={inputCollateral}
+                  onChange={(e) =>
+                    setInputCollateral(parseFloat(e.target.value) || 0)
+                  }
+                />
+                <Button onClick={() => handleDepositCollateral()}>
+                  Deposit
+                </Button>
               </p>
 
               <p className="flex w-full max-w-sm items-center space-x-2">
