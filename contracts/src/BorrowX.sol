@@ -254,17 +254,26 @@ contract BorrowX is ReentrancyGuard {
     function _withdrawAmountAllowed(address _user) internal view returns (uint256) {
         // The amount of USDC minted;
         uint256 currentlyMinted = xusdcMinted[_user];
+
+        // Get the amoun of collateral deposited by the user
+        uint256 userCollateral = collateralDeposited[_user];
+
         // If user did not mint any xUSDC, he can withdraw the full amount of collateral
         if (currentlyMinted == 0) {
-            return collateralDeposited[_user];
+            return userCollateral;
         }
-        // Token amount of the usdc minted;
-        uint256 tokenAmountOfxUSDCMinted = _getTokenAmountFromUsd(currentlyMinted);
-        // How much token collateral user actually have;
-        uint256 userCollateral = collateralDeposited[_user];
-        // the difference between 50% of token collateral and the token value of xUSDC minted can be withdrawn without breaking LTV;
 
-        uint256 tokenAmountToWithdraw = (userCollateral * LOAN_TO_VALUE / LOAN_PRECISION) - tokenAmountOfxUSDCMinted;
+        // How much the user collateral is worth
+        uint256 usdValueOfCollateral = _getUsdValueFromToken(userCollateral);
+
+        if (usdValueOfCollateral < ((currentlyMinted * LOAN_PRECISION) / LOAN_TO_VALUE)) return 0;
+
+        // How much user can withdraw - in USD
+        uint256 usdAmountToWithdraw = usdValueOfCollateral - ((currentlyMinted * LOAN_PRECISION) / LOAN_TO_VALUE);
+
+        // Compute the token amount from the usd amound
+        uint256 tokenAmountToWithdraw = _getTokenAmountFromUsd(usdAmountToWithdraw);
+
         return (tokenAmountToWithdraw);
     }
 
