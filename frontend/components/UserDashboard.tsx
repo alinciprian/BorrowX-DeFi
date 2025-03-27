@@ -11,8 +11,8 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-import { usePrivy, useWallets } from "@privy-io/react-auth";
-import { useAccount, useDisconnect } from "wagmi";
+
+import { useAccount } from "wagmi";
 import {
   getBalance,
   waitForTransactionReceipt,
@@ -23,8 +23,6 @@ import { wagmiConfig } from "../components/Providers";
 import { useState, useEffect } from "react";
 import { BorrowXABI } from "../config/BorrowXABI";
 import { xusdcABI } from "../config/xusdcABI";
-import { InputWithButton } from "./InputWithButton";
-import { metisGoerli } from "wagmi/chains";
 
 export default function Dashboard({
   isLoading,
@@ -34,7 +32,6 @@ export default function Dashboard({
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
 
   const [collateral, setCollateral] = useState<BalanceType | null>(null);
   const [borrowed, setBorrowed] = useState<BalanceType | null>(null);
@@ -66,7 +63,7 @@ export default function Dashboard({
     try {
       const balancexUSDC = await getBalance(wagmiConfig, {
         address: address!,
-        token: "0x45062607281c2f9E3931D227A1132B818B906110",
+        token: "0xBEed2827e2cb03ea4B4d4DA8A1CF8638D9CeCA27",
       });
 
       setxusdcBalance(balancexUSDC);
@@ -79,7 +76,7 @@ export default function Dashboard({
   async function fetchUserCollateralDeposited(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
+      address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
       functionName: "getUserCollateralDeposited",
       args: [address],
     })) as bigint;
@@ -93,7 +90,7 @@ export default function Dashboard({
   async function fetchUserBorrowAmount(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
+      address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
       functionName: "getUserMintedXUSDC",
       args: [address],
     })) as bigint;
@@ -107,7 +104,7 @@ export default function Dashboard({
   async function fetchUserBorrowAllowance(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
+      address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
       functionName: "getMintAmountAllowed",
       args: [address],
     })) as bigint;
@@ -121,7 +118,7 @@ export default function Dashboard({
   async function fetchUserWithdrawalAllowance(address: `0x${string}`) {
     const result: bigint = (await readContract(wagmiConfig, {
       abi: BorrowXABI,
-      address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
+      address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
       functionName: "getWithdrawAmountAllowed",
       args: [address],
     })) as bigint;
@@ -153,7 +150,7 @@ export default function Dashboard({
       setIsLoading(true);
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
+        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
         functionName: "depositCollateral",
         value: BigInt(inputCollateral * PRECISION),
       });
@@ -173,7 +170,7 @@ export default function Dashboard({
       setIsLoading(true);
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
+        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
         functionName: "withdrawCollateral",
         args: [BigInt(amount * PRECISION)],
       });
@@ -193,7 +190,7 @@ export default function Dashboard({
       setIsLoading(true);
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
+        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
         functionName: "mintxUSDC",
         args: [BigInt(amount * PRECISION)],
       });
@@ -212,17 +209,17 @@ export default function Dashboard({
       setIsLoading(true);
       const txHashApprove = await writeContract(wagmiConfig, {
         abi: xusdcABI,
-        address: "0x45062607281c2f9E3931D227A1132B818B906110",
+        address: "0xBEed2827e2cb03ea4B4d4DA8A1CF8638D9CeCA27",
         functionName: "approve",
         args: [
-          "0x8D55903A900776A336296F6F44de9C0cd4F87127",
+          "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
           BigInt(amount * PRECISION),
         ],
       });
       await waitForTransactionReceipt(wagmiConfig, { hash: txHashApprove });
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x8D55903A900776A336296F6F44de9C0cd4F87127",
+        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
         functionName: "burnxUSDC",
         args: [BigInt(amount * PRECISION)],
       });
