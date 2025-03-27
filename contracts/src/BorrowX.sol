@@ -243,11 +243,15 @@ contract BorrowX is ReentrancyGuard {
     /// @notice This function is used to compute the maximum amount of xUSDC a user can mint.
     /// @notice Takes into account the collateral value and the amount already minted;
     function _mintAmountAllowed(address _user) internal view returns (uint256) {
+        // Get the USD value of the collateral
         uint256 usdCollateralValue = _getUsdValueFromToken(collateralDeposited[_user]);
+        // User is allowed to mint only half of the collateral value
         uint256 maxUSDCLoanToValue = (usdCollateralValue * LOAN_TO_VALUE) / LOAN_PRECISION;
+        // How much user already minted
         uint256 currentlyMinted = xusdcMinted[_user];
+
         if (currentlyMinted > maxUSDCLoanToValue) return 0;
-        return (maxUSDCLoanToValue - currentlyMinted);
+        else return (maxUSDCLoanToValue - currentlyMinted);
     }
 
     /// @notice This function is used to compute the maximum amount of collateral a user can withdraw from his position
