@@ -225,7 +225,7 @@ export default function Dashboard({
       });
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
       fetchUserData();
-      setInputBorrow(0);
+      setInputPayDebt(0);
       setIsLoading(false);
     } catch (error) {
       console.log(error);
@@ -287,12 +287,14 @@ export default function Dashboard({
                   onChange={(e) => setInputPayDebt(parseFloat(e.target.value))}
                 />
                 <Button
+                  className="hover:bg-green-700"
                   disabled={isLoading}
                   onClick={() => handlePayDebt(inputPayDebt)}
                 >
                   Pay debt
                 </Button>
                 <Button
+                  className="hover:bg-green-700"
                   disabled={isLoading}
                   onClick={() => setInputPayDebt(Number(borrowed?.formatted))}
                 >
@@ -304,7 +306,9 @@ export default function Dashboard({
                   Close position if you wish to pay the entire debt amount and
                   withdraw all collateral.
                 </p>
-                <Button disabled={isLoading}>Close Position</Button>
+                <Button className="hover:bg-red-600" disabled={isLoading}>
+                  Close Position
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -326,6 +330,7 @@ export default function Dashboard({
                 <Button
                   onClick={() => handleDepositCollateral()}
                   disabled={isLoading}
+                  className="hover:bg-green-700"
                 >
                   Deposit
                 </Button>
@@ -344,6 +349,7 @@ export default function Dashboard({
                 <Button
                   onClick={() => handleCollateralWithdrawal(inputWithdraw)}
                   disabled={isLoading}
+                  className="hover:bg-green-700"
                 >
                   Withdraw
                 </Button>
@@ -352,6 +358,7 @@ export default function Dashboard({
                   onClick={() =>
                     setInputWithdraw(Number(withdrawAllowance?.formatted))
                   }
+                  className="hover:bg-green-700"
                 >
                   Max
                 </Button>
@@ -382,12 +389,14 @@ export default function Dashboard({
                   disabled={isLoading}
                 />
                 <Button
+                  className="hover:bg-green-700"
                   disabled={isLoading}
                   onClick={() => handleBorrow(inputBorrow)}
                 >
                   Borrow
                 </Button>
                 <Button
+                  className="hover:bg-green-700"
                   disabled={isLoading}
                   onClick={() =>
                     setInputBorrow(Number(borrowAllowance?.formatted))
