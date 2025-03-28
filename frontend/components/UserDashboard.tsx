@@ -23,6 +23,20 @@ import { wagmiConfig } from "../components/Providers";
 import { useState, useEffect } from "react";
 import { BorrowXABI } from "../config/BorrowXABI";
 import { xusdcABI } from "../config/xusdcABI";
+import { z } from "zod";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+type BalanceType = {
+  formatted: string;
+  symbol: string;
+};
+
+const InputSchema = z.object({
+  amount: z.number().positive(),
+});
+
+type InputSchemaType = z.infer<typeof InputSchema>;
 
 export default function Dashboard({
   isLoading,
@@ -47,12 +61,13 @@ export default function Dashboard({
   const [inputBorrow, setInputBorrow] = useState<number>(0);
   const [inputPayDebt, setInputPayDebt] = useState<number>(0);
 
-  const PRECISION = 10 ** 18;
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<InputSchemaType>({ resolver: zodResolver(InputSchema) });
 
-  type BalanceType = {
-    formatted: string;
-    symbol: string;
-  };
+  const PRECISION = 10 ** 18;
 
   //////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////READ FROM CONTRACT/////////////////////////////////////////////
@@ -350,21 +365,25 @@ export default function Dashboard({
             </CardHeader>
             <CardContent>
               <p className="mb-1 flex w-full max-w-sm items-center space-x-2">
-                <Input
-                  disabled={isLoading}
-                  type="number"
-                  value={inputCollateral}
-                  onChange={(e) =>
-                    setInputCollateral(parseFloat(e.target.value) || 0)
-                  }
-                />
-                <Button
-                  onClick={() => handleDepositCollateral()}
-                  disabled={isLoading}
-                  className="hover:bg-green-700"
-                >
-                  Deposit
-                </Button>
+                <form onSubmit={handleSubmit(handleDepositCollateral)}>
+                  <Input
+                    disabled={isLoading}
+                    type="number"
+                    placeholder="amount to deposit"
+                    value={inputCollateral}
+                    onChange={(e) =>
+                      setInputCollateral(parseFloat(e.target.value) || 0)
+                    }
+                  />
+                  {errors.amount && <span>{errors.amount.message}</span>}
+                  <Button
+                    onClick={() => handleDepositCollateral()}
+                    disabled={isLoading}
+                    className="hover:bg-green-700"
+                  >
+                    Deposit
+                  </Button>
+                </form>
               </p>
 
               <p className="flex w-full max-w-sm items-center space-x-2">
