@@ -4,6 +4,7 @@ import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import WithdrawForm from "./WithdrawForm";
+import DepositForm from "./DepositForm";
 import {
   Card,
   CardDescription,
@@ -24,30 +25,13 @@ import { wagmiConfig } from "../components/Providers";
 import { useState, useEffect } from "react";
 import { BorrowXABI } from "../config/BorrowXABI";
 import { xusdcABI } from "../config/xusdcABI";
-import { z } from "zod";
-import { useForm, SubmitHandler } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import { formatUnits, parseUnits } from "viem";
 
 type BalanceType = {
   formatted: string;
   symbol: string;
 };
-
-const DepositSchema = z.object({
-  amountDeposit: z.number().positive("Input must be greater than 0"),
-});
-type DepositSchemaType = z.infer<typeof DepositSchema>;
-
-// const PayDebtSchema = z.object({
-//   amountPayDebt: z.number().positive("Input must be greater than 0"),
-// });
-// type PayDebtSchemaType = z.infer<typeof PayDebtSchema>;
-
-// const BorrowSchema = z.object({
-//   amountBorrow: z.number().positive("Input must be greater than 0"),
-// });
-// type BorrowSchemaType = z.infer<typeof BorrowSchema>;
 
 export default function Dashboard({
   isLoading,
@@ -68,16 +52,6 @@ export default function Dashboard({
   const [xusdcBalance, setxusdcBalance] = useState<BalanceType | null>(null);
   const [inputBorrow, setInputBorrow] = useState<number>(0);
   const [inputPayDebt, setInputPayDebt] = useState<number>(0);
-
-  const {
-    register: registerDeposit,
-    handleSubmit: handleSubmitDeposit,
-    formState: { errors: errorsDeposit },
-    watch,
-  } = useForm<DepositSchemaType>({ resolver: zodResolver(DepositSchema) });
-
-  const _amount = watch("amountDeposit");
-  console.log(_amount);
 
   //////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////READ FROM CONTRACT/////////////////////////////////////////////
@@ -187,29 +161,6 @@ export default function Dashboard({
   ///////////////////////Write to contract//////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////
 
-  // Allow user to deposit collateral
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async function handleDepositCollateral(data: any) {
-    try {
-      const { amountDeposit } = data;
-
-      setIsLoading(true);
-      const txHash = await writeContract(wagmiConfig, {
-        abi: BorrowXABI,
-        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
-        functionName: "depositCollateral",
-        value: parseUnits(amountDeposit.toString(), 18),
-      });
-      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
-      fetchUserData();
-
-      setIsLoading(false);
-    } catch (error) {
-      console.log(error);
-      setIsLoading(false);
-    }
-  }
-
   // Allow user to borrow funds
   async function handleBorrow(amount: number) {
     try {
@@ -218,7 +169,7 @@ export default function Dashboard({
         abi: BorrowXABI,
         address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
         functionName: "mintxUSDC",
-        args: [BigInt(amount * PRECISION)],
+        args: [parseUnits(amount.toString(), 18)],
       });
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
       fetchUserData();
@@ -239,7 +190,7 @@ export default function Dashboard({
         functionName: "approve",
         args: [
           "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
-          BigInt(amount * PRECISION),
+          parseUnits(amount.toString(), 18),
         ],
       });
       await waitForTransactionReceipt(wagmiConfig, { hash: txHashApprove });
@@ -247,7 +198,7 @@ export default function Dashboard({
         abi: BorrowXABI,
         address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
         functionName: "burnxUSDC",
-        args: [BigInt(amount * PRECISION)],
+        args: [parseUnits(amount.toString(), 18)],
       });
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
       fetchUserData();
@@ -268,7 +219,7 @@ export default function Dashboard({
         functionName: "approve",
         args: [
           "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
-          BigInt(Number(xusdcBalance?.formatted) * PRECISION),
+          parseUnits(xusdcBalance!.formatted, 18),
         ],
       });
       await waitForTransactionReceipt(wagmiConfig, { hash: txHashApprove });
@@ -375,34 +326,11 @@ export default function Dashboard({
               <CardTitle>Collateral management</CardTitle>
             </CardHeader>
             <CardContent>
-              <form
-                className=" flex w-full max-w-sm items-center space-x-2"
-                onSubmit={handleSubmitDeposit(handleDepositCollateral)}
-              >
-                <Input
-                  disabled={isLoading}
-                  type="number"
-                  step="0.000001"
-                  placeholder="amount to deposit"
-                  {...registerDeposit("amountDeposit", {
-                    valueAsNumber: true,
-                  })}
-                />
-
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="hover:bg-green-700"
-                >
-                  Deposit
-                </Button>
-              </form>
-
-              {errorsDeposit.amountDeposit && (
-                <span className="text-red-500 text-xs mt-1">
-                  {errorsDeposit.amountDeposit.message}
-                </span>
-              )}
+              <DepositForm
+                setIsLoading={setIsLoading}
+                isLoading={isLoading}
+                onfetchUserData={fetchUserData}
+              />
 
               <WithdrawForm
                 setIsLoading={setIsLoading}

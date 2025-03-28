@@ -1,5 +1,4 @@
 import { Button } from "./ui/button";
-import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +7,7 @@ import { writeContract, waitForTransactionReceipt } from "@wagmi/core";
 import { wagmiConfig } from "./Providers";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
-import { formatUnits, parseUnits } from "viem";
+import { parseUnits } from "viem";
 
 type BalanceType = {
   formatted: string;
@@ -42,6 +41,7 @@ export default function WithdrawForm({
   } = useForm<WithdrawSchemaType>({ resolver: zodResolver(WithdrawSchema) });
 
   // Allow user to withdraw collateral
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async function handleCollateralWithdrawal(data: any) {
     const { amount } = data;
     try {
