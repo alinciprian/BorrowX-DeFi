@@ -32,11 +32,25 @@ type BalanceType = {
   symbol: string;
 };
 
-const InputSchema = z.object({
-  amount: z.number().positive(),
+const DepositSchema = z.object({
+  amountDeposit: z.number().positive("Input must be greater than 0"),
 });
+type InputSchemaType = z.infer<typeof DepositSchema>;
 
-type InputSchemaType = z.infer<typeof InputSchema>;
+const WithdrawSchema = z.object({
+  amountWithdraw: z.number().positive("Input must be greater than 0"),
+});
+type WithdrawSchemaType = z.infer<typeof WithdrawSchema>;
+
+const PayDebtSchema = z.object({
+  amountPayDebt: z.number().positive("Input must be greater than 0"),
+});
+type PayDebtSchemaType = z.infer<typeof PayDebtSchema>;
+
+const BorrowSchema = z.object({
+  amountBorrow: z.number().positive("Input must be greater than 0"),
+});
+type BorrowSchemaType = z.infer<typeof BorrowSchema>;
 
 export default function Dashboard({
   isLoading,
@@ -62,10 +76,16 @@ export default function Dashboard({
   const [inputPayDebt, setInputPayDebt] = useState<number>(0);
 
   const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<InputSchemaType>({ resolver: zodResolver(InputSchema) });
+    register: registerDeposit,
+    handleSubmit: handleSubmitDeposit,
+    formState: { errors: errorsDeposit },
+  } = useForm<InputSchemaType>({ resolver: zodResolver(DepositSchema) });
+
+  const {
+    register: registerWithdraw,
+    handleSubmit: handleSubmitWithdraw,
+    formState: { errors: errorsWithdraw },
+  } = useForm<WithdrawSchemaType>({ resolver: zodResolver(WithdrawSchema) });
 
   const PRECISION = 10 ** 18;
 
@@ -321,7 +341,7 @@ export default function Dashboard({
                 Your current debt: {borrowed?.formatted} {borrowed?.symbol}.
               </p>
 
-              <p className="flex w-full max-w-sm items-center space-x-2">
+              <form className="flex w-full max-w-sm items-center space-x-2">
                 <Input
                   type="number"
                   disabled={isLoading}
@@ -331,7 +351,7 @@ export default function Dashboard({
                 <Button
                   className="hover:bg-green-700"
                   disabled={isLoading}
-                  onClick={() => handlePayDebt(inputPayDebt)}
+                  type="submit"
                 >
                   Pay debt
                 </Button>
@@ -342,7 +362,7 @@ export default function Dashboard({
                 >
                   Max
                 </Button>
-              </p>
+              </form>
               <div className="mt-1 flex w-full max-w-sm items-center space-x-2">
                 <p>
                   Close position if you wish to pay the entire debt amount and
@@ -364,40 +384,60 @@ export default function Dashboard({
               <CardTitle>Collateral management</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="mb-1 flex w-full max-w-sm items-center space-x-2">
-                <form onSubmit={handleSubmit(handleDepositCollateral)}>
-                  <Input
-                    disabled={isLoading}
-                    type="number"
-                    placeholder="amount to deposit"
-                    value={inputCollateral}
-                    onChange={(e) =>
-                      setInputCollateral(parseFloat(e.target.value) || 0)
-                    }
-                  />
-                  {errors.amount && <span>{errors.amount.message}</span>}
-                  <Button
-                    onClick={() => handleDepositCollateral()}
-                    disabled={isLoading}
-                    className="hover:bg-green-700"
-                  >
-                    Deposit
-                  </Button>
-                </form>
-              </p>
-
-              <p className="flex w-full max-w-sm items-center space-x-2">
+              <form
+                className=" flex w-full max-w-sm items-center space-x-2"
+                onSubmit={handleSubmitDeposit(handleDepositCollateral)}
+              >
                 <Input
+                  disabled={isLoading}
                   type="number"
+                  step="0.01"
                   min="0"
+                  placeholder="amount to deposit"
+                  {...registerDeposit("amountDeposit", { valueAsNumber: true })}
+                  value={inputCollateral}
+                  onChange={(e) =>
+                    setInputCollateral(parseFloat(e.target.value))
+                  }
+                />
+
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="hover:bg-green-700"
+                >
+                  Deposit
+                </Button>
+              </form>
+
+              {errorsDeposit.amountDeposit && (
+                <span className="text-red-500 text-xs mt-1">
+                  {errorsDeposit.amountDeposit.message}
+                </span>
+              )}
+
+              <form
+                className=" mt-1 flex w-full max-w-sm items-center space-x-2"
+                onSubmit={handleSubmitWithdraw(() =>
+                  handleCollateralWithdrawal(inputWithdraw)
+                )}
+              >
+                <Input
+                  disabled={isLoading}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="amount to deposit"
+                  {...registerWithdraw("amountWithdraw", {
+                    valueAsNumber: true,
+                  })}
                   value={inputWithdraw}
                   onChange={(e) =>
                     setInputWithdraw(parseFloat(e.target.value) || 0)
                   }
-                  disabled={isLoading}
                 />
                 <Button
-                  onClick={() => handleCollateralWithdrawal(inputWithdraw)}
+                  type="submit"
                   disabled={isLoading}
                   className="hover:bg-green-700"
                 >
@@ -412,7 +452,12 @@ export default function Dashboard({
                 >
                   Max
                 </Button>
-              </p>
+              </form>
+              {errorsWithdraw.amountWithdraw && (
+                <span className="text-red-500 text-xs mt-1">
+                  {errorsWithdraw.amountWithdraw.message}
+                </span>
+              )}
               <p className=" mt-1 text-[10px] text-gray-400">
                 You can withdraw {withdrawAllowance?.formatted}{" "}
                 {withdrawAllowance?.symbol}.
