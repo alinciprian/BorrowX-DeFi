@@ -233,6 +233,33 @@ export default function Dashboard({
     }
   }
 
+  async function handleClosePosition() {
+    try {
+      setIsLoading(true);
+      const txHashApprove = await writeContract(wagmiConfig, {
+        abi: xusdcABI,
+        address: "0xBEed2827e2cb03ea4B4d4DA8A1CF8638D9CeCA27",
+        functionName: "approve",
+        args: [
+          "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+          BigInt(Number(xusdcBalance?.formatted) * PRECISION),
+        ],
+      });
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHashApprove });
+      const txHash = await writeContract(wagmiConfig, {
+        abi: BorrowXABI,
+        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+        functionName: "closePosition",
+      });
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
+      fetchUserData();
+      setIsLoading(false);
+    } catch (error) {
+      console.log(error);
+      setIsLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (isConnected) {
       fetchUserData();
@@ -306,7 +333,11 @@ export default function Dashboard({
                   Close position if you wish to pay the entire debt amount and
                   withdraw all collateral.
                 </p>
-                <Button className="hover:bg-red-600" disabled={isLoading}>
+                <Button
+                  className="hover:bg-red-600"
+                  disabled={isLoading}
+                  onClick={() => handleClosePosition()}
+                >
                   Close Position
                 </Button>
               </div>
