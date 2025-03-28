@@ -3,6 +3,7 @@ import * as React from "react";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import WithdrawForm from "./WithdrawForm";
 import {
   Card,
   CardDescription,
@@ -26,6 +27,7 @@ import { xusdcABI } from "../config/xusdcABI";
 import { z } from "zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { formatUnits, parseUnits } from "viem";
 
 type BalanceType = {
   formatted: string;
@@ -35,22 +37,17 @@ type BalanceType = {
 const DepositSchema = z.object({
   amountDeposit: z.number().positive("Input must be greater than 0"),
 });
-type InputSchemaType = z.infer<typeof DepositSchema>;
+type DepositSchemaType = z.infer<typeof DepositSchema>;
 
-const WithdrawSchema = z.object({
-  amountWithdraw: z.number().positive("Input must be greater than 0"),
-});
-type WithdrawSchemaType = z.infer<typeof WithdrawSchema>;
+// const PayDebtSchema = z.object({
+//   amountPayDebt: z.number().positive("Input must be greater than 0"),
+// });
+// type PayDebtSchemaType = z.infer<typeof PayDebtSchema>;
 
-const PayDebtSchema = z.object({
-  amountPayDebt: z.number().positive("Input must be greater than 0"),
-});
-type PayDebtSchemaType = z.infer<typeof PayDebtSchema>;
-
-const BorrowSchema = z.object({
-  amountBorrow: z.number().positive("Input must be greater than 0"),
-});
-type BorrowSchemaType = z.infer<typeof BorrowSchema>;
+// const BorrowSchema = z.object({
+//   amountBorrow: z.number().positive("Input must be greater than 0"),
+// });
+// type BorrowSchemaType = z.infer<typeof BorrowSchema>;
 
 export default function Dashboard({
   isLoading,
@@ -70,8 +67,8 @@ export default function Dashboard({
     useState<BalanceType | null>(null);
   const [xusdcBalance, setxusdcBalance] = useState<BalanceType | null>(null);
 
-  const [inputCollateral, setInputCollateral] = useState<number>(0);
-  const [inputWithdraw, setInputWithdraw] = useState<number>(0);
+  /*   const [inputCollateral, setInputCollateral] = useState<number>(0); */
+
   const [inputBorrow, setInputBorrow] = useState<number>(0);
   const [inputPayDebt, setInputPayDebt] = useState<number>(0);
 
@@ -79,13 +76,11 @@ export default function Dashboard({
     register: registerDeposit,
     handleSubmit: handleSubmitDeposit,
     formState: { errors: errorsDeposit },
-  } = useForm<InputSchemaType>({ resolver: zodResolver(DepositSchema) });
+    watch,
+  } = useForm<DepositSchemaType>({ resolver: zodResolver(DepositSchema) });
 
-  const {
-    register: registerWithdraw,
-    handleSubmit: handleSubmitWithdraw,
-    formState: { errors: errorsWithdraw },
-  } = useForm<WithdrawSchemaType>({ resolver: zodResolver(WithdrawSchema) });
+  const _amount = watch("amountDeposit");
+  console.log(_amount);
 
   const PRECISION = 10 ** 18;
 
@@ -109,14 +104,15 @@ export default function Dashboard({
 
   /// This function is used to read the amount of collateral deposited from contract
   async function fetchUserCollateralDeposited(address: `0x${string}`) {
-    const result: bigint = (await readContract(wagmiConfig, {
+    const result = await readContract(wagmiConfig, {
       abi: BorrowXABI,
       address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
       functionName: "getUserCollateralDeposited",
       args: [address],
-    })) as bigint;
+    });
+    console.log(result);
     setCollateral({
-      formatted: (Number(result) / 10 ** 18).toFixed(4), // Convert `bigint` to string with 4 decimals
+      formatted: formatUnits(result as bigint, 18), // Convert `bigint` to string with 4 decimals
       symbol: "ETH",
     });
   }
@@ -180,18 +176,20 @@ export default function Dashboard({
   //////////////////////////////////////////////////////////////////////////////////////
 
   // Allow user to deposit collateral
-  async function handleDepositCollateral() {
+  async function handleDepositCollateral(data: any) {
     try {
+      const { amountDeposit } = data;
+
       setIsLoading(true);
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
         address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
         functionName: "depositCollateral",
-        value: BigInt(inputCollateral * PRECISION),
+        value: parseUnits(amountDeposit.toString(), 18),
       });
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
       fetchUserData();
-      setInputCollateral(0);
+
       setIsLoading(false);
     } catch (error) {
       console.log(error);
@@ -200,24 +198,24 @@ export default function Dashboard({
   }
 
   // Allow user to withdraw collateral
-  async function handleCollateralWithdrawal(amount: number) {
-    try {
-      setIsLoading(true);
-      const txHash = await writeContract(wagmiConfig, {
-        abi: BorrowXABI,
-        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
-        functionName: "withdrawCollateral",
-        args: [BigInt(amount * PRECISION)],
-      });
-      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
-      fetchUserData();
-      setInputWithdraw(0);
-      setIsLoading(false);
-    } catch (error) {
-      console.log(error);
-      setIsLoading(false);
-    }
-  }
+  // async function handleCollateralWithdrawal(amount: number) {
+  //   try {
+  //     setIsLoading(true);
+  //     const txHash = await writeContract(wagmiConfig, {
+  //       abi: BorrowXABI,
+  //       address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+  //       functionName: "withdrawCollateral",
+  //       args: [BigInt(amount * PRECISION)],
+  //     });
+  //     await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
+  //     fetchUserData();
+  //     setInputWithdraw(0);
+  //     setIsLoading(false);
+  //   } catch (error) {
+  //     console.log(error);
+  //     setIsLoading(false);
+  //   }
+  // }
 
   // Allow user to borrow funds
   async function handleBorrow(amount: number) {
@@ -391,14 +389,16 @@ export default function Dashboard({
                 <Input
                   disabled={isLoading}
                   type="number"
-                  step="0.01"
-                  min="0"
+                  step="0.000001"
+                  /*  min="0" */
                   placeholder="amount to deposit"
-                  {...registerDeposit("amountDeposit", { valueAsNumber: true })}
-                  value={inputCollateral}
+                  {...registerDeposit("amountDeposit", {
+                    valueAsNumber: true,
+                  })}
+                  /*  value={inputCollateral}
                   onChange={(e) =>
                     setInputCollateral(parseFloat(e.target.value))
-                  }
+                  } */
                 />
 
                 <Button
@@ -416,7 +416,13 @@ export default function Dashboard({
                 </span>
               )}
 
-              <form
+              <WithdrawForm
+                setIsLoading={setIsLoading}
+                isLoading={isLoading}
+                onfetchUserData={fetchUserData}
+                withdrawAllowance={withdrawAllowance}
+              />
+              {/* <form
                 className=" mt-1 flex w-full max-w-sm items-center space-x-2"
                 onSubmit={handleSubmitWithdraw(() =>
                   handleCollateralWithdrawal(inputWithdraw)
@@ -461,7 +467,7 @@ export default function Dashboard({
               <p className=" mt-1 text-[10px] text-gray-400">
                 You can withdraw {withdrawAllowance?.formatted}{" "}
                 {withdrawAllowance?.symbol}.
-              </p>
+              </p> */}
             </CardContent>
           </Card>
 
