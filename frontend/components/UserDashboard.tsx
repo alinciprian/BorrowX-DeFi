@@ -1,6 +1,5 @@
 import Balance from "../components/Balance";
 import * as React from "react";
-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import WithdrawForm from "./WithdrawForm";
@@ -25,7 +24,8 @@ import { wagmiConfig } from "../components/Providers";
 import { useState, useEffect } from "react";
 import { BorrowXABI } from "../config/BorrowXABI";
 import { xusdcABI } from "../config/xusdcABI";
-
+import { BorrowXAddress } from "@/lib/constants";
+import { xUSDCAddress } from "@/lib/constants";
 import { formatUnits, parseUnits } from "viem";
 
 type BalanceType = {
@@ -41,7 +41,6 @@ export default function Dashboard({
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const { address, isConnected } = useAccount();
-
   const [collateral, setCollateral] = useState<BalanceType | null>(null);
   const [borrowed, setBorrowed] = useState<BalanceType | null>(null);
   const [borrowAllowance, setBorrowAllowance] = useState<BalanceType | null>(
@@ -62,7 +61,7 @@ export default function Dashboard({
     try {
       const balancexUSDC = await getBalance(wagmiConfig, {
         address: address!,
-        token: "0xBEed2827e2cb03ea4B4d4DA8A1CF8638D9CeCA27",
+        token: xUSDCAddress,
       });
 
       setxusdcBalance(balancexUSDC);
@@ -76,7 +75,7 @@ export default function Dashboard({
     try {
       const result = await readContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+        address: BorrowXAddress,
         functionName: "getUserCollateralDeposited",
         args: [address],
       });
@@ -96,7 +95,7 @@ export default function Dashboard({
     try {
       const result = await readContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+        address: BorrowXAddress,
         functionName: "getUserMintedXUSDC",
         args: [address],
       });
@@ -114,7 +113,7 @@ export default function Dashboard({
     try {
       const result: bigint = (await readContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+        address: BorrowXAddress,
         functionName: "getMintAmountAllowed",
         args: [address],
       })) as bigint;
@@ -132,7 +131,7 @@ export default function Dashboard({
     try {
       const result: bigint = (await readContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+        address: BorrowXAddress,
         functionName: "getWithdrawAmountAllowed",
         args: [address],
       })) as bigint;
@@ -167,7 +166,7 @@ export default function Dashboard({
       setIsLoading(true);
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+        address: BorrowXAddress,
         functionName: "mintxUSDC",
         args: [parseUnits(amount.toString(), 18)],
       });
@@ -186,17 +185,14 @@ export default function Dashboard({
       setIsLoading(true);
       const txHashApprove = await writeContract(wagmiConfig, {
         abi: xusdcABI,
-        address: "0xBEed2827e2cb03ea4B4d4DA8A1CF8638D9CeCA27",
+        address: xUSDCAddress,
         functionName: "approve",
-        args: [
-          "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
-          parseUnits(amount.toString(), 18),
-        ],
+        args: [BorrowXAddress, parseUnits(amount.toString(), 18)],
       });
       await waitForTransactionReceipt(wagmiConfig, { hash: txHashApprove });
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+        address: BorrowXAddress,
         functionName: "burnxUSDC",
         args: [parseUnits(amount.toString(), 18)],
       });
@@ -215,17 +211,14 @@ export default function Dashboard({
       setIsLoading(true);
       const txHashApprove = await writeContract(wagmiConfig, {
         abi: xusdcABI,
-        address: "0xBEed2827e2cb03ea4B4d4DA8A1CF8638D9CeCA27",
+        address: xUSDCAddress,
         functionName: "approve",
-        args: [
-          "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
-          parseUnits(xusdcBalance!.formatted, 18),
-        ],
+        args: [BorrowXAddress, parseUnits(xusdcBalance!.formatted, 18)],
       });
       await waitForTransactionReceipt(wagmiConfig, { hash: txHashApprove });
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+        address: BorrowXAddress,
         functionName: "closePosition",
       });
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });

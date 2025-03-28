@@ -8,6 +8,7 @@ import { wagmiConfig } from "./Providers";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import { parseUnits } from "viem";
+import { BorrowXAddress } from "@/lib/constants";
 
 type BalanceType = {
   formatted: string;
@@ -48,7 +49,7 @@ export default function WithdrawForm({
       setIsLoading(true);
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+        address: BorrowXAddress,
         functionName: "withdrawCollateral",
         args: [parseUnits(amount.toString(), 18)],
       });

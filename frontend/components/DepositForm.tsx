@@ -7,6 +7,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { parseUnits } from "viem";
+import { BorrowXAddress } from "@/lib/constants";
 
 export default function DepositForm({
   isLoading,
@@ -18,7 +19,10 @@ export default function DepositForm({
   onfetchUserData: () => void;
 }) {
   const DepositSchema = z.object({
-    amountDeposit: z.number().positive("Input must be greater than 0"),
+    amountDeposit: z
+      .number({ message: "Amount to deposit must be a number" })
+      .min(0, "Deposit amount must be greater than 0")
+      .positive("Input must be greater than 0"),
   });
   type DepositSchemaType = z.infer<typeof DepositSchema>;
 
@@ -41,7 +45,7 @@ export default function DepositForm({
       setIsLoading(true);
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
-        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+        address: BorrowXAddress,
         functionName: "depositCollateral",
         value: parseUnits(amountDeposit.toString(), 18),
       });
