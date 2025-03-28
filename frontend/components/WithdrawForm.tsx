@@ -8,6 +8,7 @@ import { writeContract, waitForTransactionReceipt } from "@wagmi/core";
 import { wagmiConfig } from "./Providers";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
+import { formatUnits, parseUnits } from "viem";
 
 type BalanceType = {
   formatted: string;
@@ -40,22 +41,20 @@ export default function WithdrawForm({
     setValue,
   } = useForm<WithdrawSchemaType>({ resolver: zodResolver(WithdrawSchema) });
 
-  const [inputWithdraw, setInputWithdraw] = useState<number>(0);
-  const PRECISION = 10 ** 18;
-
   // Allow user to withdraw collateral
-  async function handleCollateralWithdrawal(amount: number) {
+  async function handleCollateralWithdrawal(data: any) {
+    const { amount } = data;
     try {
       setIsLoading(true);
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
         address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
         functionName: "withdrawCollateral",
-        args: [BigInt(amount * PRECISION)],
+        args: [parseUnits(amount.toString(), 18)],
       });
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
       onfetchUserData();
-      setInputWithdraw(0);
+
       setIsLoading(false);
     } catch (error) {
       console.log(error);
@@ -67,20 +66,18 @@ export default function WithdrawForm({
     <>
       <form
         className=" mt-1 flex w-full max-w-sm items-center space-x-2"
-        onSubmit={handleSubmitWithdraw(() =>
-          handleCollateralWithdrawal(inputWithdraw)
-        )}
+        onSubmit={handleSubmitWithdraw(handleCollateralWithdrawal)}
       >
         <Input
           disabled={isLoading}
           type="number"
-          step="0.01"
+          step="0.000001"
           {...registerWithdraw("amount", {
             valueAsNumber: true,
           })}
         />
         <Button
-          /* type="submit" */
+          type="submit"
           disabled={isLoading}
           className="hover:bg-green-700"
         >

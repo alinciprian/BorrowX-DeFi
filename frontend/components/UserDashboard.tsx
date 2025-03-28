@@ -66,9 +66,6 @@ export default function Dashboard({
   const [withdrawAllowance, setWithdrawAllowance] =
     useState<BalanceType | null>(null);
   const [xusdcBalance, setxusdcBalance] = useState<BalanceType | null>(null);
-
-  /*   const [inputCollateral, setInputCollateral] = useState<number>(0); */
-
   const [inputBorrow, setInputBorrow] = useState<number>(0);
   const [inputPayDebt, setInputPayDebt] = useState<number>(0);
 
@@ -81,8 +78,6 @@ export default function Dashboard({
 
   const _amount = watch("amountDeposit");
   console.log(_amount);
-
-  const PRECISION = 10 ** 18;
 
   //////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////READ FROM CONTRACT/////////////////////////////////////////////
@@ -104,59 +99,76 @@ export default function Dashboard({
 
   /// This function is used to read the amount of collateral deposited from contract
   async function fetchUserCollateralDeposited(address: `0x${string}`) {
-    const result = await readContract(wagmiConfig, {
-      abi: BorrowXABI,
-      address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
-      functionName: "getUserCollateralDeposited",
-      args: [address],
-    });
-    console.log(result);
-    setCollateral({
-      formatted: formatUnits(result as bigint, 18), // Convert `bigint` to string with 4 decimals
-      symbol: "ETH",
-    });
+    try {
+      const result = await readContract(wagmiConfig, {
+        abi: BorrowXABI,
+        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+        functionName: "getUserCollateralDeposited",
+        args: [address],
+      });
+      console.log(result);
+      setCollateral({
+        formatted: formatUnits(result as bigint, 18),
+        symbol: "ETH",
+      });
+    } catch (error) {
+      console.log(error);
+      setIsLoading(false);
+    }
   }
 
   /// This function is used to read the amount of xUSDC borrowed by the user
   async function fetchUserBorrowAmount(address: `0x${string}`) {
-    const result: bigint = (await readContract(wagmiConfig, {
-      abi: BorrowXABI,
-      address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
-      functionName: "getUserMintedXUSDC",
-      args: [address],
-    })) as bigint;
-    setBorrowed({
-      formatted: (Number(result) / 10 ** 18).toFixed(4), // Convert `bigint` to string with 4 decimals
-      symbol: "xUSDC",
-    });
+    try {
+      const result = await readContract(wagmiConfig, {
+        abi: BorrowXABI,
+        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+        functionName: "getUserMintedXUSDC",
+        args: [address],
+      });
+      setBorrowed({
+        formatted: formatUnits(result as bigint, 18),
+        symbol: "xUSDC",
+      });
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   /// This function is used to read the amount of xUSDC an user is allowed to mint
   async function fetchUserBorrowAllowance(address: `0x${string}`) {
-    const result: bigint = (await readContract(wagmiConfig, {
-      abi: BorrowXABI,
-      address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
-      functionName: "getMintAmountAllowed",
-      args: [address],
-    })) as bigint;
-    setBorrowAllowance({
-      formatted: (Number(result) / 10 ** 18).toFixed(4), // Convert `bigint` to string with 4 decimals
-      symbol: "xUSDC",
-    });
+    try {
+      const result: bigint = (await readContract(wagmiConfig, {
+        abi: BorrowXABI,
+        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+        functionName: "getMintAmountAllowed",
+        args: [address],
+      })) as bigint;
+      setBorrowAllowance({
+        formatted: formatUnits(result as bigint, 18),
+        symbol: "xUSDC",
+      });
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   /// This function is used to read the amount of collateral an user is allowed to withdraw given current debt
   async function fetchUserWithdrawalAllowance(address: `0x${string}`) {
-    const result: bigint = (await readContract(wagmiConfig, {
-      abi: BorrowXABI,
-      address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
-      functionName: "getWithdrawAmountAllowed",
-      args: [address],
-    })) as bigint;
-    setWithdrawAllowance({
-      formatted: (Number(result) / 10 ** 18).toFixed(4), // Convert `bigint` to string with 4 decimals
-      symbol: "ETH",
-    });
+    try {
+      const result: bigint = (await readContract(wagmiConfig, {
+        abi: BorrowXABI,
+        address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
+        functionName: "getWithdrawAmountAllowed",
+        args: [address],
+      })) as bigint;
+      setWithdrawAllowance({
+        formatted: formatUnits(result as bigint, 18),
+        symbol: "ETH",
+      });
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   const fetchUserData = async () => {
@@ -176,6 +188,7 @@ export default function Dashboard({
   //////////////////////////////////////////////////////////////////////////////////////
 
   // Allow user to deposit collateral
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async function handleDepositCollateral(data: any) {
     try {
       const { amountDeposit } = data;
@@ -196,26 +209,6 @@ export default function Dashboard({
       setIsLoading(false);
     }
   }
-
-  // Allow user to withdraw collateral
-  // async function handleCollateralWithdrawal(amount: number) {
-  //   try {
-  //     setIsLoading(true);
-  //     const txHash = await writeContract(wagmiConfig, {
-  //       abi: BorrowXABI,
-  //       address: "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2",
-  //       functionName: "withdrawCollateral",
-  //       args: [BigInt(amount * PRECISION)],
-  //     });
-  //     await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
-  //     fetchUserData();
-  //     setInputWithdraw(0);
-  //     setIsLoading(false);
-  //   } catch (error) {
-  //     console.log(error);
-  //     setIsLoading(false);
-  //   }
-  // }
 
   // Allow user to borrow funds
   async function handleBorrow(amount: number) {
@@ -390,15 +383,10 @@ export default function Dashboard({
                   disabled={isLoading}
                   type="number"
                   step="0.000001"
-                  /*  min="0" */
                   placeholder="amount to deposit"
                   {...registerDeposit("amountDeposit", {
                     valueAsNumber: true,
                   })}
-                  /*  value={inputCollateral}
-                  onChange={(e) =>
-                    setInputCollateral(parseFloat(e.target.value))
-                  } */
                 />
 
                 <Button
@@ -422,52 +410,6 @@ export default function Dashboard({
                 onfetchUserData={fetchUserData}
                 withdrawAllowance={withdrawAllowance}
               />
-              {/* <form
-                className=" mt-1 flex w-full max-w-sm items-center space-x-2"
-                onSubmit={handleSubmitWithdraw(() =>
-                  handleCollateralWithdrawal(inputWithdraw)
-                )}
-              >
-                <Input
-                  disabled={isLoading}
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="amount to deposit"
-                  {...registerWithdraw("amountWithdraw", {
-                    valueAsNumber: true,
-                  })}
-                  value={inputWithdraw}
-                  onChange={(e) =>
-                    setInputWithdraw(parseFloat(e.target.value) || 0)
-                  }
-                />
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="hover:bg-green-700"
-                >
-                  Withdraw
-                </Button>
-                <Button
-                  disabled={isLoading}
-                  onClick={() =>
-                    setInputWithdraw(Number(withdrawAllowance?.formatted))
-                  }
-                  className="hover:bg-green-700"
-                >
-                  Max
-                </Button>
-              </form>
-              {errorsWithdraw.amountWithdraw && (
-                <span className="text-red-500 text-xs mt-1">
-                  {errorsWithdraw.amountWithdraw.message}
-                </span>
-              )}
-              <p className=" mt-1 text-[10px] text-gray-400">
-                You can withdraw {withdrawAllowance?.formatted}{" "}
-                {withdrawAllowance?.symbol}.
-              </p> */}
             </CardContent>
           </Card>
 
