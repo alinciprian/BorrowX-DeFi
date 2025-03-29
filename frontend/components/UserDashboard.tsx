@@ -1,7 +1,5 @@
 import Balance from "../components/Balance";
 import * as React from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import WithdrawForm from "./WithdrawForm";
 import DepositForm from "./DepositForm";
 import {
@@ -12,24 +10,18 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-
 import { useAccount } from "wagmi";
-import {
-  getBalance,
-  waitForTransactionReceipt,
-  readContract,
-  writeContract,
-} from "@wagmi/core";
+import { getBalance, readContract } from "@wagmi/core";
 import { wagmiConfig } from "../components/Providers";
 import { useState, useEffect } from "react";
 import { BorrowXABI } from "../config/BorrowXABI";
-import { xusdcABI } from "../config/xusdcABI";
 import { BorrowXAddress } from "@/lib/constants";
 import { xUSDCAddress } from "@/lib/constants";
-import { formatUnits, parseUnits } from "viem";
+import { formatUnits } from "viem";
 import BorrowForm from "./BorrowForm";
 import { BalanceType } from "@/lib/utils";
 import UserStats from "./UserStats";
+import PayDebt from "./PayDebt";
 
 export default function Dashboard({
   isLoading,
@@ -47,7 +39,6 @@ export default function Dashboard({
   const [withdrawAllowance, setWithdrawAllowance] =
     useState<BalanceType | null>(null);
   const [xusdcBalance, setxusdcBalance] = useState<BalanceType | null>(null);
-  const [inputPayDebt, setInputPayDebt] = useState<number>(0);
 
   //////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////READ FROM CONTRACT/////////////////////////////////////////////
@@ -157,56 +148,6 @@ export default function Dashboard({
   ///////////////////////Write to contract//////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////
 
-  async function handlePayDebt(amount: number) {
-    try {
-      setIsLoading(true);
-      const txHashApprove = await writeContract(wagmiConfig, {
-        abi: xusdcABI,
-        address: xUSDCAddress,
-        functionName: "approve",
-        args: [BorrowXAddress, parseUnits(amount.toString(), 18)],
-      });
-      await waitForTransactionReceipt(wagmiConfig, { hash: txHashApprove });
-      const txHash = await writeContract(wagmiConfig, {
-        abi: BorrowXABI,
-        address: BorrowXAddress,
-        functionName: "burnxUSDC",
-        args: [parseUnits(amount.toString(), 18)],
-      });
-      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
-      fetchUserData();
-      setInputPayDebt(0);
-      setIsLoading(false);
-    } catch (error) {
-      console.log(error);
-      setIsLoading(false);
-    }
-  }
-
-  async function handleClosePosition() {
-    try {
-      setIsLoading(true);
-      const txHashApprove = await writeContract(wagmiConfig, {
-        abi: xusdcABI,
-        address: xUSDCAddress,
-        functionName: "approve",
-        args: [BorrowXAddress, parseUnits(xusdcBalance!.formatted, 18)],
-      });
-      await waitForTransactionReceipt(wagmiConfig, { hash: txHashApprove });
-      const txHash = await writeContract(wagmiConfig, {
-        abi: BorrowXABI,
-        address: BorrowXAddress,
-        functionName: "closePosition",
-      });
-      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
-      fetchUserData();
-      setIsLoading(false);
-    } catch (error) {
-      console.log(error);
-      setIsLoading(false);
-    }
-  }
-
   useEffect(() => {
     if (isConnected) {
       fetchUserData();
@@ -240,45 +181,12 @@ export default function Dashboard({
               <CardTitle> Manage debt </CardTitle>
             </CardHeader>
             <CardContent className="text-[10px] text-gray-400">
-              <p className="mb-1">
-                Your current debt: {borrowed?.formatted} {borrowed?.symbol}.
-              </p>
-
-              <form className="flex w-full max-w-sm items-center space-x-2">
-                <Input
-                  type="number"
-                  disabled={isLoading}
-                  value={inputPayDebt}
-                  onChange={(e) => setInputPayDebt(parseFloat(e.target.value))}
-                />
-                <Button
-                  className="hover:bg-green-700"
-                  disabled={isLoading}
-                  type="submit"
-                >
-                  Pay debt
-                </Button>
-                <Button
-                  className="hover:bg-green-700"
-                  disabled={isLoading}
-                  onClick={() => setInputPayDebt(Number(borrowed?.formatted))}
-                >
-                  Max
-                </Button>
-              </form>
-              <div className="mt-1 flex w-full max-w-sm items-center space-x-2">
-                <p>
-                  Close position if you wish to pay the entire debt amount and
-                  withdraw all collateral.
-                </p>
-                <Button
-                  className="hover:bg-red-600"
-                  disabled={isLoading}
-                  onClick={() => handleClosePosition()}
-                >
-                  Close Position
-                </Button>
-              </div>
+              <PayDebt
+                setIsLoading={setIsLoading}
+                isLoading={isLoading}
+                onfetchUserData={fetchUserData}
+                borrowed={borrowed}
+              />
             </CardContent>
           </Card>
 
