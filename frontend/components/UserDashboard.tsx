@@ -29,6 +29,7 @@ import { xUSDCAddress } from "@/lib/constants";
 import { formatUnits, parseUnits } from "viem";
 import BorrowForm from "./BorrowForm";
 import { BalanceType } from "@/lib/utils";
+import UserStats from "./UserStats";
 
 export default function Dashboard({
   isLoading,
@@ -230,16 +231,7 @@ export default function Dashboard({
               <CardTitle>Your stats</CardTitle>
             </CardHeader>
             <CardContent>
-              {
-                <p className="text-[10px] text-gray-400">
-                  {collateral?.formatted} {collateral?.symbol}
-                </p>
-              }
-              {
-                <p className="text-[10px] text-gray-400">
-                  {xusdcBalance?.formatted} {xusdcBalance?.symbol}
-                </p>
-              }
+              <UserStats collateral={collateral} xusdcBalance={xusdcBalance} />
             </CardContent>
           </Card>
 
