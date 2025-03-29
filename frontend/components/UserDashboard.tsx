@@ -27,11 +27,8 @@ import { xusdcABI } from "../config/xusdcABI";
 import { BorrowXAddress } from "@/lib/constants";
 import { xUSDCAddress } from "@/lib/constants";
 import { formatUnits, parseUnits } from "viem";
-
-type BalanceType = {
-  formatted: string;
-  symbol: string;
-};
+import BorrowForm from "./BorrowForm";
+import { BalanceType } from "@/lib/utils";
 
 export default function Dashboard({
   isLoading,
@@ -339,36 +336,12 @@ export default function Dashboard({
               <CardTitle>Borrow xUSDC</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className=" mb-1 text-[10px] text-gray-400">
-                You can currently borrow {borrowAllowance?.formatted}{" "}
-                {borrowAllowance?.symbol}.
-              </p>
-              <p className="flex w-full max-w-sm items-center space-x-2">
-                <Input
-                  type="number"
-                  value={inputBorrow}
-                  onChange={(e) =>
-                    setInputBorrow(parseFloat(e.target.value) || 0)
-                  }
-                  disabled={isLoading}
-                />
-                <Button
-                  className="hover:bg-green-700"
-                  disabled={isLoading}
-                  onClick={() => handleBorrow(inputBorrow)}
-                >
-                  Borrow
-                </Button>
-                <Button
-                  className="hover:bg-green-700"
-                  disabled={isLoading}
-                  onClick={() =>
-                    setInputBorrow(Number(borrowAllowance?.formatted))
-                  }
-                >
-                  Max
-                </Button>
-              </p>
+              <BorrowForm
+                setIsLoading={setIsLoading}
+                isLoading={isLoading}
+                onfetchUserData={fetchUserData}
+                borrowAllowance={borrowAllowance}
+              />
             </CardContent>
           </Card>
         </div>

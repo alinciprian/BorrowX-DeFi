@@ -9,11 +9,7 @@ import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import { parseUnits } from "viem";
 import { BorrowXAddress } from "@/lib/constants";
-
-type BalanceType = {
-  formatted: string;
-  symbol: string;
-};
+import { BalanceType } from "@/lib/utils";
 
 const WithdrawSchema = z.object({
   amount: z
@@ -55,7 +51,7 @@ export default function WithdrawForm({
       });
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
       onfetchUserData();
-
+      setValue("amount", 0);
       setIsLoading(false);
     } catch (error) {
       console.log(error);
