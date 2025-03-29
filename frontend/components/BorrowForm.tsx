@@ -6,6 +6,10 @@ import { BorrowXAddress } from "@/lib/constants";
 import { writeContract, waitForTransactionReceipt } from "@wagmi/core";
 import { wagmiConfig } from "./Providers";
 import { parseUnits } from "viem";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Badge } from "./ui/badge";
 
 export default function BorrowForm({
   isLoading,
@@ -18,18 +22,35 @@ export default function BorrowForm({
   onfetchUserData: () => void;
   borrowAllowance: BalanceType | null;
 }) {
+  const BorrowSchema = z.object({
+    amountDeposit: z
+      .number({ message: "Amount to borrow must be a number" })
+      .min(0, "Borrow amount must be greater than 0")
+      .positive("Input must be greater than 0"),
+  });
+  type BorrowSchemaType = z.infer<typeof BorrowSchema>;
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+  } = useForm<BorrowSchemaType>({ resolver: zodResolver(BorrowSchema) });
+
   // Allow user to borrow funds
-  async function handleBorrow(amount: number) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function handleBorrow(data: any) {
+    const { amountDeposit } = data;
     try {
       setIsLoading(true);
       const txHash = await writeContract(wagmiConfig, {
         abi: BorrowXABI,
         address: BorrowXAddress,
         functionName: "mintxUSDC",
-        args: [parseUnits(amount.toString(), 18)],
+        args: [parseUnits(amountDeposit.toString(), 18)],
       });
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
       onfetchUserData();
+      setValue("amountDeposit", 0);
       setIsLoading(false);
     } catch (error) {
       console.log(error);
@@ -43,19 +64,40 @@ export default function BorrowForm({
         You can currently borrow {borrowAllowance?.formatted}{" "}
         {borrowAllowance?.symbol}.
       </p>
-      <form className="flex w-full max-w-sm items-center space-x-2">
-        <Input type="number" disabled={isLoading} />
-        <Button className="hover:bg-green-700" disabled={isLoading}>
-          Borrow
-        </Button>
+      <form
+        className="flex w-full max-w-sm items-center space-x-2"
+        onSubmit={handleSubmit(handleBorrow)}
+      >
+        <Input
+          disabled={isLoading}
+          type="number"
+          step="0.000001"
+          placeholder="amount to borrow"
+          {...register("amountDeposit", {
+            valueAsNumber: true,
+          })}
+        />
         <Button
+          type="submit"
           className="hover:bg-green-700"
           disabled={isLoading}
-          onClick={() => setInputBorrow(Number(borrowAllowance?.formatted))}
         >
-          Max
+          Borrow
         </Button>
       </form>
+      <Badge
+        className="hover:bg-green-700"
+        onClick={() =>
+          setValue("amountDeposit", Number(borrowAllowance?.formatted))
+        }
+      >
+        Max
+      </Badge>
+      {errors.amountDeposit && (
+        <span className="text-red-500 text-xs mt-1">
+          {errors.amountDeposit.message}
+        </span>
+      )}
     </>
   );
 }

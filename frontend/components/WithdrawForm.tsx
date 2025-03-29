@@ -81,21 +81,25 @@ export default function WithdrawForm({
           Withdraw
         </Button>
       </form>
-      <Badge
-        /*  disabled={isLoading} */
-        onClick={() => setValue("amount", Number(withdrawAllowance?.formatted))}
-        className="hover:bg-green-700"
-      >
-        Max
-      </Badge>
+
       {errorsWithdraw.amount && (
         <span className="text-red-500 text-xs mt-1">
           {errorsWithdraw.amount.message}
         </span>
       )}
+
       <p className=" mt-1 text-[10px] text-gray-400">
         You can withdraw {withdrawAllowance?.formatted}{" "}
         {withdrawAllowance?.symbol}.
+        <Badge
+          /*  disabled={isLoading} */
+          onClick={() =>
+            setValue("amount", Number(withdrawAllowance?.formatted))
+          }
+          className="hover:bg-green-700"
+        >
+          Max
+        </Badge>
       </p>
     </>
   );

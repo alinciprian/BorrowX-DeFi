@@ -31,6 +31,7 @@ export default function DepositForm({
     handleSubmit: handleSubmitDeposit,
     formState: { errors: errorsDeposit },
     watch,
+    setValue,
   } = useForm<DepositSchemaType>({ resolver: zodResolver(DepositSchema) });
 
   const _amount = watch("amountDeposit");
@@ -51,7 +52,7 @@ export default function DepositForm({
       });
       await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
       onfetchUserData();
-
+      setValue("amountDeposit", 0);
       setIsLoading(false);
     } catch (error) {
       console.log(error);

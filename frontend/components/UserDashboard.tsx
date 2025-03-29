@@ -46,7 +46,6 @@ export default function Dashboard({
   const [withdrawAllowance, setWithdrawAllowance] =
     useState<BalanceType | null>(null);
   const [xusdcBalance, setxusdcBalance] = useState<BalanceType | null>(null);
-  const [inputBorrow, setInputBorrow] = useState<number>(0);
   const [inputPayDebt, setInputPayDebt] = useState<number>(0);
 
   //////////////////////////////////////////////////////////////////////////////////////
@@ -156,26 +155,6 @@ export default function Dashboard({
   //////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////Write to contract//////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////
-
-  // Allow user to borrow funds
-  async function handleBorrow(amount: number) {
-    try {
-      setIsLoading(true);
-      const txHash = await writeContract(wagmiConfig, {
-        abi: BorrowXABI,
-        address: BorrowXAddress,
-        functionName: "mintxUSDC",
-        args: [parseUnits(amount.toString(), 18)],
-      });
-      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
-      fetchUserData();
-      setInputBorrow(0);
-      setIsLoading(false);
-    } catch (error) {
-      console.log(error);
-      setIsLoading(false);
-    }
-  }
 
   async function handlePayDebt(amount: number) {
     try {
