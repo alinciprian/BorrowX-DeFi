@@ -173,6 +173,12 @@ export default function Dashboard({
             </CardHeader>
             <CardContent>
               <UserStats collateral={collateral} xusdcBalance={xusdcBalance} />
+              <WithdrawForm
+                setIsLoading={setIsLoading}
+                isLoading={isLoading}
+                onfetchUserData={fetchUserData}
+                withdrawAllowance={withdrawAllowance}
+              />
             </CardContent>
           </Card>
 
@@ -199,13 +205,6 @@ export default function Dashboard({
                 setIsLoading={setIsLoading}
                 isLoading={isLoading}
                 onfetchUserData={fetchUserData}
-              />
-
-              <WithdrawForm
-                setIsLoading={setIsLoading}
-                isLoading={isLoading}
-                onfetchUserData={fetchUserData}
-                withdrawAllowance={withdrawAllowance}
               />
             </CardContent>
           </Card>

@@ -62,18 +62,29 @@ export default function WithdrawForm({
   return (
     <>
       <form
-        className=" mt-1 flex w-full max-w-sm items-center space-x-2"
+        className="mt-1 flex w-full max-w-sm items-center space-x-2"
         onSubmit={handleSubmitWithdraw(handleCollateralWithdrawal)}
       >
-        <Input
-          disabled={isLoading}
-          type="number"
-          placeholder="amount to withdraw"
-          step="0.000001"
-          {...registerWithdraw("amount", {
-            valueAsNumber: true,
-          })}
-        />
+        <div className="relative w-full">
+          <Input
+            disabled={isLoading}
+            type="number"
+            placeholder="Amount to withdraw"
+            step="0.000001"
+            {...registerWithdraw("amount", {
+              valueAsNumber: true,
+            })}
+            className="pr-14"
+          />
+          <Badge
+            onClick={() =>
+              setValue("amount", Number(withdrawAllowance?.formatted))
+            }
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black text-white px-2 py-1 text-xs cursor-pointer hover:bg-green-700"
+          >
+            Max
+          </Badge>
+        </div>
         <Button
           type="submit"
           disabled={isLoading}
@@ -89,18 +100,9 @@ export default function WithdrawForm({
         </span>
       )}
 
-      <p className=" mt-1 text-[10px] text-gray-400">
+      <p className="mt-1 text-[10px] text-gray-400">
         You can withdraw {withdrawAllowance?.formatted}{" "}
         {withdrawAllowance?.symbol}.
-        <Badge
-          /*  disabled={isLoading} */
-          onClick={() =>
-            setValue("amount", Number(withdrawAllowance?.formatted))
-          }
-          className="hover:bg-green-700"
-        >
-          Max
-        </Badge>
       </p>
     </>
   );

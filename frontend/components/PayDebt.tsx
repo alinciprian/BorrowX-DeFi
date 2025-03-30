@@ -100,15 +100,24 @@ export default function PayDebt({
         className="flex w-full max-w-sm items-center space-x-2"
         onSubmit={handleSubmit(handlePayDebt)}
       >
-        <Input
-          disabled={isLoading}
-          type="number"
-          step="0.000001"
-          placeholder="amount debt to pay"
-          {...register("amountPay", {
-            valueAsNumber: true,
-          })}
-        />
+        <div className="relative w-full">
+          <Input
+            className="pr-14"
+            disabled={isLoading}
+            type="number"
+            step="0.000001"
+            placeholder="amount debt to pay"
+            {...register("amountPay", {
+              valueAsNumber: true,
+            })}
+          />
+          <Badge
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black text-white px-2 py-1 text-xs cursor-pointer hover:bg-green-700"
+            onClick={() => setValue("amountPay", Number(borrowed?.formatted))}
+          >
+            Max
+          </Badge>
+        </div>
         <Button
           className="hover:bg-green-700"
           disabled={isLoading}
@@ -122,12 +131,6 @@ export default function PayDebt({
           {errors.amountPay.message}
         </span>
       )}
-      <Badge
-        className="hover:bg-green-700"
-        onClick={() => setValue("amountPay", Number(borrowed?.formatted))}
-      >
-        Max
-      </Badge>
 
       <div className="mt-1 flex w-full max-w-sm items-center space-x-2">
         <p>

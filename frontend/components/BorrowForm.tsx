@@ -68,15 +68,26 @@ export default function BorrowForm({
         className="flex w-full max-w-sm items-center space-x-2"
         onSubmit={handleSubmit(handleBorrow)}
       >
-        <Input
-          disabled={isLoading}
-          type="number"
-          step="0.0000001"
-          placeholder="amount to borrow"
-          {...register("amountDeposit", {
-            valueAsNumber: true,
-          })}
-        />
+        <div className="relative w-full">
+          <Input
+            className="pr-14"
+            disabled={isLoading}
+            type="number"
+            step="0.0000001"
+            placeholder="amount to borrow"
+            {...register("amountDeposit", {
+              valueAsNumber: true,
+            })}
+          />
+          <Badge
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black text-white px-2 py-1 text-xs cursor-pointer hover:bg-green-700"
+            onClick={() =>
+              setValue("amountDeposit", Number(borrowAllowance?.formatted))
+            }
+          >
+            Max
+          </Badge>
+        </div>
         <Button
           type="submit"
           className="hover:bg-green-700"
@@ -85,14 +96,7 @@ export default function BorrowForm({
           Borrow
         </Button>
       </form>
-      <Badge
-        className="hover:bg-green-700"
-        onClick={() =>
-          setValue("amountDeposit", Number(borrowAllowance?.formatted))
-        }
-      >
-        Max
-      </Badge>
+
       {errors.amountDeposit && (
         <span className="text-red-500 text-xs mt-1">
           {errors.amountDeposit.message}
