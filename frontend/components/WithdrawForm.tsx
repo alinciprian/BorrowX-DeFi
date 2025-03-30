@@ -68,6 +68,7 @@ export default function WithdrawForm({
         <Input
           disabled={isLoading}
           type="number"
+          placeholder="amount to withdraw"
           step="0.000001"
           {...registerWithdraw("amount", {
             valueAsNumber: true,
