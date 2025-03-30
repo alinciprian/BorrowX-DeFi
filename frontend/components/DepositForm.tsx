@@ -63,23 +63,26 @@ export default function DepositForm({
   return (
     <>
       <form
-        className=" flex w-full max-w-sm items-center space-x-2"
+        className=" flex w-full max-w-sm items-center space-x-2 mb-4"
         onSubmit={handleSubmitDeposit(handleDepositCollateral)}
       >
-        <Input
-          disabled={isLoading}
-          type="number"
-          step="0.000001"
-          placeholder="amount to deposit"
-          {...registerDeposit("amountDeposit", {
-            valueAsNumber: true,
-          })}
-        />
+        <div className=" w-full">
+          <Input
+            className="pr-14 w-[220px]"
+            disabled={isLoading}
+            type="number"
+            step="0.01"
+            placeholder="amount to deposit"
+            {...registerDeposit("amountDeposit", {
+              valueAsNumber: true,
+            })}
+          />
+        </div>
 
         <Button
           type="submit"
           disabled={isLoading}
-          className="hover:bg-green-700"
+          className="bg-green-600 hover:bg-green-700"
         >
           Deposit
         </Button>

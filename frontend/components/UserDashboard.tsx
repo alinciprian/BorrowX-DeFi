@@ -178,6 +178,7 @@ export default function Dashboard({
                 isLoading={isLoading}
                 onfetchUserData={fetchUserData}
                 withdrawAllowance={withdrawAllowance}
+                borrowed={borrowed}
               />
             </CardContent>
           </Card>
@@ -187,38 +188,22 @@ export default function Dashboard({
               <CardTitle> Manage debt </CardTitle>
             </CardHeader>
             <CardContent className="text-[10px] text-gray-400">
-              <PayDebt
-                setIsLoading={setIsLoading}
-                isLoading={isLoading}
-                onfetchUserData={fetchUserData}
-                borrowed={borrowed}
-              />
-            </CardContent>
-          </Card>
-
-          <Card className="w-[400px] bg-gray-800 text-white">
-            <CardHeader>
-              <CardTitle>Collateral management</CardTitle>
-            </CardHeader>
-            <CardContent>
               <DepositForm
                 setIsLoading={setIsLoading}
                 isLoading={isLoading}
                 onfetchUserData={fetchUserData}
               />
-            </CardContent>
-          </Card>
-
-          <Card className="w-[400px] bg-gray-800 text-white">
-            <CardHeader>
-              <CardTitle>Borrow xUSDC</CardTitle>
-            </CardHeader>
-            <CardContent>
               <BorrowForm
                 setIsLoading={setIsLoading}
                 isLoading={isLoading}
                 onfetchUserData={fetchUserData}
                 borrowAllowance={borrowAllowance}
+              />
+              <PayDebt
+                setIsLoading={setIsLoading}
+                isLoading={isLoading}
+                onfetchUserData={fetchUserData}
+                borrowed={borrowed}
               />
             </CardContent>
           </Card>

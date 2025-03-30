@@ -10,6 +10,8 @@ import { Badge } from "./ui/badge";
 import { parseUnits } from "viem";
 import { BorrowXAddress } from "@/lib/constants";
 import { BalanceType } from "@/lib/utils";
+import { xusdcABI } from "@/config/xusdcABI";
+import { xUSDCAddress } from "@/lib/constants";
 
 const WithdrawSchema = z.object({
   amount: z
@@ -24,11 +26,13 @@ export default function WithdrawForm({
   setIsLoading,
   withdrawAllowance,
   onfetchUserData,
+  borrowed,
 }: {
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   withdrawAllowance: BalanceType | null;
   onfetchUserData: () => void;
+  borrowed: BalanceType | null;
 }) {
   const {
     register: registerWithdraw,
@@ -59,51 +63,93 @@ export default function WithdrawForm({
     }
   }
 
+  async function handleClosePosition() {
+    try {
+      setIsLoading(true);
+      const txHashApprove = await writeContract(wagmiConfig, {
+        abi: xusdcABI,
+        address: xUSDCAddress,
+        functionName: "approve",
+        args: [BorrowXAddress, parseUnits(borrowed!.formatted, 18)],
+      });
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHashApprove });
+      const txHash = await writeContract(wagmiConfig, {
+        abi: BorrowXABI,
+        address: BorrowXAddress,
+        functionName: "closePosition",
+      });
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
+      onfetchUserData();
+      setIsLoading(false);
+    } catch (error) {
+      console.log(error);
+      setIsLoading(false);
+    }
+  }
+
   return (
     <>
+      {/* Withdrawable Balance Info */}
+      <p className="mt-1 text-[10px] text-gray-400">
+        You can withdraw {withdrawAllowance?.formatted}{" "}
+        {withdrawAllowance?.symbol}.
+      </p>
+
+      {/* Withdraw Form - Compact & Aligned */}
       <form
-        className="mt-1 flex w-full max-w-sm items-center space-x-2"
+        className="mt-2 flex w-full flex-col gap-2"
         onSubmit={handleSubmitWithdraw(handleCollateralWithdrawal)}
       >
-        <div className="relative w-full">
+        {/* Input + Max Button */}
+        <div className="relative">
           <Input
             disabled={isLoading}
             type="number"
             placeholder="Amount to withdraw"
-            step="0.000001"
-            {...registerWithdraw("amount", {
-              valueAsNumber: true,
-            })}
-            className="pr-14"
+            step="0.01"
+            {...registerWithdraw("amount", { valueAsNumber: true })}
+            className="w-full pr-12 text-sm"
           />
           <Badge
             onClick={() =>
               setValue("amount", Number(withdrawAllowance?.formatted))
             }
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black text-white px-2 py-1 text-xs cursor-pointer hover:bg-green-700"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black text-white px-2 py-1 text-[10px] cursor-pointer hover:bg-green-700"
           >
             Max
           </Badge>
         </div>
+
+        {/* Withdraw Button - Fixed Width */}
         <Button
           type="submit"
           disabled={isLoading}
-          className="hover:bg-green-700"
+          className="w-full bg-green-600 hover:bg-green-700 text-sm"
         >
           Withdraw
         </Button>
+
+        {/* Error Message */}
+        {errorsWithdraw.amount && (
+          <span className="text-red-500 text-xs">
+            {errorsWithdraw.amount.message}
+          </span>
+        )}
       </form>
 
-      {errorsWithdraw.amount && (
-        <span className="text-red-500 text-xs mt-1">
-          {errorsWithdraw.amount.message}
-        </span>
-      )}
-
-      <p className="mt-1 text-[10px] text-gray-400">
-        You can withdraw {withdrawAllowance?.formatted}{" "}
-        {withdrawAllowance?.symbol}.
-      </p>
+      {/* Close Position Section - Aligned */}
+      <div className="mt-3 flex w-full items-center justify-between gap-2 text-xs">
+        <p className="text-gray-500">
+          Close position to pay all debt and withdraw all collateral.
+        </p>
+        <Button
+          className="bg-red-600 hover:bg-red-700 px-3 py-1 text-xs"
+          disabled={isLoading}
+          onClick={handleClosePosition}
+        >
+          Close position
+        </Button>
+      </div>
     </>
   );
 }

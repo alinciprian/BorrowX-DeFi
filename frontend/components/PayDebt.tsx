@@ -66,30 +66,6 @@ export default function PayDebt({
     }
   }
 
-  async function handleClosePosition() {
-    try {
-      setIsLoading(true);
-      const txHashApprove = await writeContract(wagmiConfig, {
-        abi: xusdcABI,
-        address: xUSDCAddress,
-        functionName: "approve",
-        args: [BorrowXAddress, parseUnits(borrowed!.formatted, 18)],
-      });
-      await waitForTransactionReceipt(wagmiConfig, { hash: txHashApprove });
-      const txHash = await writeContract(wagmiConfig, {
-        abi: BorrowXABI,
-        address: BorrowXAddress,
-        functionName: "closePosition",
-      });
-      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
-      onfetchUserData();
-      setIsLoading(false);
-    } catch (error) {
-      console.log(error);
-      setIsLoading(false);
-    }
-  }
-
   return (
     <>
       <p className="mb-1">
@@ -102,24 +78,24 @@ export default function PayDebt({
       >
         <div className="relative w-full">
           <Input
-            className="pr-14"
+            className="pr-14 w-[220px]"
             disabled={isLoading}
             type="number"
-            step="0.000001"
+            step="0.001"
             placeholder="amount debt to pay"
             {...register("amountPay", {
               valueAsNumber: true,
             })}
           />
           <Badge
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black text-white px-2 py-1 text-xs cursor-pointer hover:bg-green-700"
+            className="absolute right-10 top-1/2 -translate-y-1/2 bg-black text-white px-2 py-1 text-xs cursor-pointer hover:bg-green-700"
             onClick={() => setValue("amountPay", Number(borrowed?.formatted))}
           >
             Max
           </Badge>
         </div>
         <Button
-          className="hover:bg-green-700"
+          className="bg-green-600 hover:bg-green-700"
           disabled={isLoading}
           type="submit"
         >
@@ -131,20 +107,6 @@ export default function PayDebt({
           {errors.amountPay.message}
         </span>
       )}
-
-      <div className="mt-1 flex w-full max-w-sm items-center space-x-2">
-        <p>
-          Close position if you wish to pay the entire debt amount and withdraw
-          all collateral.
-        </p>
-        <Button
-          className="hover:bg-red-600"
-          disabled={isLoading}
-          onClick={handleClosePosition}
-        >
-          Close Position
-        </Button>
-      </div>
     </>
   );
 }
