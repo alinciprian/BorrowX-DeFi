@@ -185,7 +185,7 @@ export default function Dashboard({
 
           <Card className="w-[400px] bg-gray-800 text-white">
             <CardHeader>
-              <CardTitle> Manage debt </CardTitle>
+              <CardTitle> Manage borrows </CardTitle>
             </CardHeader>
             <CardContent className="text-[10px] text-gray-400">
               <DepositForm

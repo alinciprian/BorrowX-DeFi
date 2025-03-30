@@ -62,6 +62,9 @@ export default function DepositForm({
 
   return (
     <>
+      <p className=" mb-1 text-[10px] text-gray-400">
+        Start by depositing some collateral.
+      </p>
       <form
         className=" flex w-full max-w-sm items-center space-x-2 mb-4"
         onSubmit={handleSubmitDeposit(handleDepositCollateral)}

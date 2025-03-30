@@ -10,16 +10,17 @@ export default function Navbar({ isLoading }: { isLoading: boolean }) {
 
   return (
     <nav className="bg-gray-800 text-white p-4 flex justify-between items-center">
-      {/* Left Section: Logo + Links */}
       <div className="flex items-center space-x-6">
         {/* Logo */}
 
-        {/* Navigation Links */}
         <a href="#" className="hover:text-gray-300">
-          Home
+          Dashboard
         </a>
         <a href="#" className="hover:text-gray-300">
-          Liquidation
+          Manage Borrows
+        </a>
+        <a href="#" className="hover:text-gray-300">
+          Liquidations
         </a>
       </div>
 
