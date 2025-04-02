@@ -307,4 +307,14 @@ contract BorrowX is ReentrancyGuard {
         bool liquidationStatus = _isEligibleForLiquidation(_user);
         return liquidationStatus;
     }
+
+    function getUsdValueFromToken(uint256 _amount) public view returns (uint256) {
+        uint256 usdValue = _getUsdValueFromToken(_amount);
+        return usdValue;
+    }
+
+    function getTokenValue(uint256 _amount) public view returns (uint256) {
+        uint256 tokenValue = _getTokenAmountFromUsd(_amount);
+        return tokenValue;
+    }
 }
