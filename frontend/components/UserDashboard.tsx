@@ -132,6 +132,8 @@ export default function Dashboard({
     }
   }
 
+  function computeNetWorth() {}
+
   const fetchUserData = async () => {
     //setIsLoading(true);
     await Promise.all([
