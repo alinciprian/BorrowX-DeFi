@@ -22,8 +22,6 @@ import BorrowForm from "./BorrowForm";
 import { BalanceType } from "@/lib/utils";
 import UserStats from "./UserStats";
 import PayDebt from "./PayDebt";
-import { parseUnits } from "viem";
-import { set } from "zod";
 
 export default function Dashboard({
   isLoading,
@@ -42,7 +40,8 @@ export default function Dashboard({
     useState<BalanceType | null>(null);
   const [xusdcBalance, setxusdcBalance] = useState<BalanceType | null>(null);
   const [netWorth, setNetworth] = useState<BalanceType | null>(null);
-  const [usdValue, setUsdValue] = useState<BalanceType | null>(null);
+  const [usdValueOfCollateral, setUsdValueOfCollateral] =
+    useState<BalanceType | null>(null);
 
   //////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////READ FROM CONTRACT/////////////////////////////////////////////
@@ -71,7 +70,7 @@ export default function Dashboard({
         functionName: "getUserCollateralDeposited",
         args: [address],
       });
-      console.log(result);
+
       setCollateral({
         formatted: formatUnits(result as bigint, 18),
         symbol: "ETH",
@@ -137,32 +136,22 @@ export default function Dashboard({
   }
 
   /// This function is used to compute the USD value of the collateral deposited
-  async function getUsdValue(amount: string) {
+  async function fetchUsdValueOfUserCollateral(address: `0x${string}`) {
     try {
-      const result: bigint = (await readContract(wagmiConfig, {
+      const result = await readContract(wagmiConfig, {
         abi: BorrowXABI,
         address: BorrowXAddress,
-        functionName: "getUsdValueFromToken",
-        args: [parseUnits(amount.toString(), 18)],
-      })) as bigint;
-      setUsdValue({
+        functionName: "getUsdValueOfUserCollateral",
+        args: [address],
+      });
+      console.log(result);
+      setUsdValueOfCollateral({
         formatted: formatUnits(result as bigint, 18),
         symbol: "USD",
       });
     } catch (error) {
       console.log(error);
     }
-  }
-
-  function computeNetWorth() {
-    console.log(usdValue);
-    const xUSDCValue = Number(xusdcBalance?.formatted);
-    const borrowedUsdValue = Number(borrowed?.formatted);
-    const result = usdCollateralValue + xUSDCValue - borrowedUsdValue;
-    setNetworth({
-      formatted: formatUnits(result as bigint, 18),
-      symbol: "USD",
-    });
   }
 
   const fetchUserData = async () => {
@@ -173,10 +162,9 @@ export default function Dashboard({
       fetchUserBorrowAmount(address!),
       fetchUserCollateralDeposited(address!),
       fetchUserWithdrawalAllowance(address!),
+      fetchUsdValueOfUserCollateral(address!),
     ]);
     setIsLoading(false);
-    computeNetWorth();
-    console.log(netWorth);
   };
 
   //////////////////////////////////////////////////////////////////////////////////////
@@ -197,7 +185,9 @@ export default function Dashboard({
       <div className="flex flex-col items-center justify-center h-screen bg-black text-white relative">
         <div className="grid grid-cols-2 gap-2 scale-150 relative">
           <div className="absolute -top-15 left-2 text-[10px] font-semibold">
-            <p className="text-gray-400">Net worth:</p>
+            <p className="text-gray-400">
+              Net worth: {usdValueOfCollateral?.formatted}
+            </p>
             <div className="flex items-center text-white">
               <p className="text-gray-400">$</p>
               <p></p>

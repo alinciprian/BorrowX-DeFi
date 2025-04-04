@@ -61,8 +61,8 @@ export const BorrowXABI = [
   },
   {
     type: "function",
-    name: "getUsdValueFromToken",
-    inputs: [{ name: "_amount", type: "uint256", internalType: "uint256" }],
+    name: "getUsdValueOfUserCollateral",
+    inputs: [{ name: "_user", type: "address", internalType: "address" }],
     outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     stateMutability: "view",
   },
