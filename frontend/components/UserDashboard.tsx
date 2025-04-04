@@ -22,6 +22,7 @@ import BorrowForm from "./BorrowForm";
 import { BalanceType } from "@/lib/utils";
 import UserStats from "./UserStats";
 import PayDebt from "./PayDebt";
+import { parseUnits } from "viem";
 
 export default function Dashboard({
   isLoading,
@@ -39,6 +40,7 @@ export default function Dashboard({
   const [withdrawAllowance, setWithdrawAllowance] =
     useState<BalanceType | null>(null);
   const [xusdcBalance, setxusdcBalance] = useState<BalanceType | null>(null);
+  const [netWorth, setNetworth] = useState<number>(0);
 
   //////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////READ FROM CONTRACT/////////////////////////////////////////////
@@ -132,7 +134,27 @@ export default function Dashboard({
     }
   }
 
-  function computeNetWorth() {}
+  /// This function is used to compute the USD value of the collateral deposited
+  async function getUsdValue(amount: bigint) {
+    try {
+      const result: bigint = (await readContract(wagmiConfig, {
+        abi: BorrowXABI,
+        address: BorrowXAddress,
+        functionName: "getUsdValueFromToken",
+        args: [parseUnits(amount.toString(), 18)],
+      })) as bigint;
+      return result;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  function computeNetWorth() {
+    const usdCollateralValue = Number(collateral?.formatted);
+    const xUSDCValue = Number(xusdcBalance?.formatted);
+    const borrowedUsdValue = Number(borrowed?.formatted);
+    setNetworth(usdCollateralValue + xUSDCValue - borrowedUsdValue);
+  }
 
   const fetchUserData = async () => {
     //setIsLoading(true);
@@ -156,6 +178,8 @@ export default function Dashboard({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected]);
+
+  // The value of collateral + balance of xUSDC - debt
 
   return (
     <div>
