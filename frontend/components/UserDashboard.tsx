@@ -23,6 +23,7 @@ import { BalanceType } from "@/lib/utils";
 import UserStats from "./UserStats";
 import PayDebt from "./PayDebt";
 import { parseUnits } from "viem";
+import { set } from "zod";
 
 export default function Dashboard({
   isLoading,
@@ -40,7 +41,7 @@ export default function Dashboard({
   const [withdrawAllowance, setWithdrawAllowance] =
     useState<BalanceType | null>(null);
   const [xusdcBalance, setxusdcBalance] = useState<BalanceType | null>(null);
-  const [netWorth, setNetworth] = useState<number>(0);
+  const [netWorth, setNetworth] = useState<BalanceType | null>(null);
 
   //////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////READ FROM CONTRACT/////////////////////////////////////////////
@@ -135,7 +136,7 @@ export default function Dashboard({
   }
 
   /// This function is used to compute the USD value of the collateral deposited
-  async function getUsdValue(amount: bigint) {
+  async function getUsdValue(amount: string) {
     try {
       const result: bigint = (await readContract(wagmiConfig, {
         abi: BorrowXABI,
@@ -150,10 +151,15 @@ export default function Dashboard({
   }
 
   function computeNetWorth() {
-    const usdCollateralValue = Number(collateral?.formatted);
+    const usdCollateralValue = Number(getUsdValue(collateral!.formatted));
+    console.log(usdCollateralValue);
     const xUSDCValue = Number(xusdcBalance?.formatted);
     const borrowedUsdValue = Number(borrowed?.formatted);
-    setNetworth(usdCollateralValue + xUSDCValue - borrowedUsdValue);
+    const result = usdCollateralValue + xUSDCValue - borrowedUsdValue;
+    setNetworth({
+      formatted: formatUnits(result as bigint, 18),
+      symbol: "USD",
+    });
   }
 
   const fetchUserData = async () => {
@@ -166,6 +172,8 @@ export default function Dashboard({
       fetchUserWithdrawalAllowance(address!),
     ]);
     setIsLoading(false);
+    computeNetWorth();
+    console.log(netWorth);
   };
 
   //////////////////////////////////////////////////////////////////////////////////////
