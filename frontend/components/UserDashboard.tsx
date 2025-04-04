@@ -17,7 +17,7 @@ import { useState, useEffect } from "react";
 import { BorrowXABI } from "../config/BorrowXABI";
 import { BorrowXAddress } from "@/lib/constants";
 import { xUSDCAddress } from "@/lib/constants";
-import { formatUnits } from "viem";
+import { formatUnits, parseUnits } from "viem";
 import BorrowForm from "./BorrowForm";
 import { BalanceType } from "@/lib/utils";
 import UserStats from "./UserStats";
@@ -54,7 +54,7 @@ export default function Dashboard({
         address: address!,
         token: xUSDCAddress,
       });
-
+      console.log(balancexUSDC);
       setxusdcBalance(balancexUSDC);
     } catch (error) {
       console.log("Error fetching xUSDC balance:", error);
@@ -154,6 +154,18 @@ export default function Dashboard({
     }
   }
 
+  function computeNetWorth() {
+    const result =
+      parseUnits(usdValueOfCollateral!.formatted, 18) +
+      parseUnits(xusdcBalance!.formatted, 18) -
+      parseUnits(borrowed!.formatted, 18);
+
+    setNetworth({
+      formatted: formatUnits(result as bigint, 18),
+      symbol: "USD",
+    });
+  }
+
   const fetchUserData = async () => {
     //setIsLoading(true);
     await Promise.all([
@@ -167,9 +179,12 @@ export default function Dashboard({
     setIsLoading(false);
   };
 
-  //////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////Write to contract//////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////
+  useEffect(() => {
+    if (usdValueOfCollateral && xusdcBalance && borrowed) {
+      computeNetWorth();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usdValueOfCollateral, xusdcBalance, borrowed]);
 
   useEffect(() => {
     if (isConnected) {
@@ -185,12 +200,10 @@ export default function Dashboard({
       <div className="flex flex-col items-center justify-center h-screen bg-black text-white relative">
         <div className="grid grid-cols-2 gap-2 scale-150 relative">
           <div className="absolute -top-15 left-2 text-[10px] font-semibold">
-            <p className="text-gray-400">
-              Net worth: {usdValueOfCollateral?.formatted}
-            </p>
+            <p className="text-gray-400">Net worth:</p>
             <div className="flex items-center text-white">
-              <p className="text-gray-400">$</p>
-              <p></p>
+              <p className="text-gray-400">$ </p>
+              <p> {netWorth?.formatted}</p>
             </div>
           </div>
 
