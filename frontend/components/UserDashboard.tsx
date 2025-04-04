@@ -42,6 +42,7 @@ export default function Dashboard({
     useState<BalanceType | null>(null);
   const [xusdcBalance, setxusdcBalance] = useState<BalanceType | null>(null);
   const [netWorth, setNetworth] = useState<BalanceType | null>(null);
+  const [usdValue, setUsdValue] = useState<BalanceType | null>(null);
 
   //////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////READ FROM CONTRACT/////////////////////////////////////////////
@@ -144,15 +145,17 @@ export default function Dashboard({
         functionName: "getUsdValueFromToken",
         args: [parseUnits(amount.toString(), 18)],
       })) as bigint;
-      return result;
+      setUsdValue({
+        formatted: formatUnits(result as bigint, 18),
+        symbol: "USD",
+      });
     } catch (error) {
       console.log(error);
     }
   }
 
   function computeNetWorth() {
-    const usdCollateralValue = Number(getUsdValue(collateral!.formatted));
-    console.log(usdCollateralValue);
+    console.log(usdValue);
     const xUSDCValue = Number(xusdcBalance?.formatted);
     const borrowedUsdValue = Number(borrowed?.formatted);
     const result = usdCollateralValue + xUSDCValue - borrowedUsdValue;
