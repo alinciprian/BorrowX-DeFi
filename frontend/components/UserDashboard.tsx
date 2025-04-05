@@ -17,7 +17,7 @@ import { useState, useEffect } from "react";
 import { BorrowXABI } from "../config/BorrowXABI";
 import { BorrowXAddress } from "@/lib/constants";
 import { xUSDCAddress } from "@/lib/constants";
-import { formatUnits } from "viem";
+import { formatUnits, parseUnits } from "viem";
 import BorrowForm from "./BorrowForm";
 import { BalanceType } from "@/lib/utils";
 import UserStats from "./UserStats";
@@ -39,6 +39,9 @@ export default function Dashboard({
   const [withdrawAllowance, setWithdrawAllowance] =
     useState<BalanceType | null>(null);
   const [xusdcBalance, setxusdcBalance] = useState<BalanceType | null>(null);
+  const [netWorth, setNetworth] = useState<BalanceType | null>(null);
+  const [usdValueOfCollateral, setUsdValueOfCollateral] =
+    useState<BalanceType | null>(null);
 
   //////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////READ FROM CONTRACT/////////////////////////////////////////////
@@ -51,7 +54,7 @@ export default function Dashboard({
         address: address!,
         token: xUSDCAddress,
       });
-
+      console.log(balancexUSDC);
       setxusdcBalance(balancexUSDC);
     } catch (error) {
       console.log("Error fetching xUSDC balance:", error);
@@ -67,7 +70,7 @@ export default function Dashboard({
         functionName: "getUserCollateralDeposited",
         args: [address],
       });
-      console.log(result);
+
       setCollateral({
         formatted: formatUnits(result as bigint, 18),
         symbol: "ETH",
@@ -132,6 +135,37 @@ export default function Dashboard({
     }
   }
 
+  /// This function is used to compute the USD value of the collateral deposited
+  async function fetchUsdValueOfUserCollateral(address: `0x${string}`) {
+    try {
+      const result = await readContract(wagmiConfig, {
+        abi: BorrowXABI,
+        address: BorrowXAddress,
+        functionName: "getUsdValueOfUserCollateral",
+        args: [address],
+      });
+      console.log(result);
+      setUsdValueOfCollateral({
+        formatted: formatUnits(result as bigint, 18),
+        symbol: "USD",
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  function computeNetWorth() {
+    const result =
+      parseUnits(usdValueOfCollateral!.formatted, 18) +
+      parseUnits(xusdcBalance!.formatted, 18) -
+      parseUnits(borrowed!.formatted, 18);
+
+    setNetworth({
+      formatted: formatUnits(result as bigint, 18),
+      symbol: "USD",
+    });
+  }
+
   const fetchUserData = async () => {
     //setIsLoading(true);
     await Promise.all([
@@ -140,13 +174,17 @@ export default function Dashboard({
       fetchUserBorrowAmount(address!),
       fetchUserCollateralDeposited(address!),
       fetchUserWithdrawalAllowance(address!),
+      fetchUsdValueOfUserCollateral(address!),
     ]);
     setIsLoading(false);
   };
 
-  //////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////Write to contract//////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////
+  useEffect(() => {
+    if (usdValueOfCollateral && xusdcBalance && borrowed) {
+      computeNetWorth();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usdValueOfCollateral, xusdcBalance, borrowed]);
 
   useEffect(() => {
     if (isConnected) {
@@ -155,6 +193,8 @@ export default function Dashboard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected]);
 
+  // The value of collateral + balance of xUSDC - debt
+
   return (
     <div>
       <div className="flex flex-col items-center justify-center h-screen bg-black text-white relative">
@@ -162,8 +202,8 @@ export default function Dashboard({
           <div className="absolute -top-15 left-2 text-[10px] font-semibold">
             <p className="text-gray-400">Net worth:</p>
             <div className="flex items-center text-white">
-              <p className="text-gray-400">$</p>
-              <p></p>
+              <p className="text-gray-400">$ </p>
+              <p> {netWorth?.formatted}</p>
             </div>
           </div>
 

@@ -1,2 +1,2 @@
-export const BorrowXAddress = "0x7ACC45Ed7b25AED601Bf2b0880b865E7B8BdF7D2";
-export const xUSDCAddress = "0xBEed2827e2cb03ea4B4d4DA8A1CF8638D9CeCA27";
+export const BorrowXAddress = "0x4bB6C572Bed1A41049Fd9274C329A0F49A367050";
+export const xUSDCAddress = "0x36be8C1E7Ac0EC9F58A8417e6aD3999446816147";

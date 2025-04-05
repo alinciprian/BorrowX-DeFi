@@ -34,9 +34,6 @@ export default function DepositForm({
     setValue,
   } = useForm<DepositSchemaType>({ resolver: zodResolver(DepositSchema) });
 
-  const _amount = watch("amountDeposit");
-  console.log(_amount);
-
   // Allow user to deposit collateral
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async function handleDepositCollateral(data: any) {

@@ -307,4 +307,15 @@ contract BorrowX is ReentrancyGuard {
         bool liquidationStatus = _isEligibleForLiquidation(_user);
         return liquidationStatus;
     }
+
+    function getUsdValueOfUserCollateral(address _user) public view returns (uint256) {
+        uint256 collateralValue = collateralDeposited[_user];
+        uint256 usdValue = _getUsdValueFromToken(collateralValue);
+        return usdValue;
+    }
+
+    function getTokenValue(uint256 _amount) public view returns (uint256) {
+        uint256 tokenValue = _getTokenAmountFromUsd(_amount);
+        return tokenValue;
+    }
 }

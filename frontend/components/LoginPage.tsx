@@ -13,14 +13,21 @@ import {
 export default function LoginPage() {
   const { connectWallet } = usePrivy();
   return (
-    <div className="flex items-center justify-center h-screen">
-      <Card className="w-[350px]">
+    <div className="flex flex-col items-center justify-center h-screen bg-black text-white relative">
+      <Card className="w-[400px] bg-gray-800 text-white">
         <CardHeader className="text-center">
           <CardTitle>STK staking app</CardTitle>
-          <CardDescription>Please connect your wallet</CardDescription>
+          <CardDescription className="text-bold">
+            Please connect your wallet
+          </CardDescription>
         </CardHeader>
         <CardFooter className="flex justify-center">
-          <Button onClick={connectWallet}>Connect</Button>
+          <Button
+            onClick={connectWallet}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            Connect
+          </Button>
         </CardFooter>
       </Card>
     </div>

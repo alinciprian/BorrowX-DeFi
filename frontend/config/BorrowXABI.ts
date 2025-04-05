@@ -54,6 +54,20 @@ export const BorrowXABI = [
   },
   {
     type: "function",
+    name: "getTokenValue",
+    inputs: [{ name: "_amount", type: "uint256", internalType: "uint256" }],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getUsdValueOfUserCollateral",
+    inputs: [{ name: "_user", type: "address", internalType: "address" }],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "getUserCollateralDeposited",
     inputs: [{ name: "_user", type: "address", internalType: "address" }],
     outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
