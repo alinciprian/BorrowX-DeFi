@@ -61,7 +61,7 @@ export default function BorrowForm({
   return (
     <>
       <p className=" mb-1 text-[10px] text-gray-400">
-        You can currently borrow {borrowAllowance?.formatted}{" "}
+        You can currently borrow {Number(borrowAllowance?.formatted).toFixed(3)}{" "}
         {borrowAllowance?.symbol}.
       </p>
       <form
