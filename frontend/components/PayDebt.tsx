@@ -69,7 +69,8 @@ export default function PayDebt({
   return (
     <>
       <p className="mb-1">
-        Your current debt: {borrowed?.formatted} {borrowed?.symbol}.
+        Your current debt: {Number(borrowed?.formatted).toFixed(3)}{" "}
+        {borrowed?.symbol}.
       </p>
 
       <form
