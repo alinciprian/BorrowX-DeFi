@@ -57,8 +57,8 @@ contract BorrowX is ReentrancyGuard {
 
     event CollateralDeposited(address indexed user, uint256 amount);
     event CollateralRedeemed(address indexed redeemFrom, address indexed redeemTo, uint256 amount);
-    event Borrowed(address indexed user, uint256 amount);
-    event Repayed(address indexed from, address indexed onBehalfOf, uint256 amount);
+    event xUSDCMinted(address indexed user, uint256 amount);
+    event xUSDCBurnt(address indexed from, address indexed onBehalfOf, uint256 amount);
 
     receive() external payable {}
 
@@ -101,7 +101,7 @@ contract BorrowX is ReentrancyGuard {
         _checkLoanToValue(_amountToMint, 0);
         xusdcMinted[msg.sender] += _amountToMint;
         i_xusdc.mint(msg.sender, _amountToMint);
-        emit Borrowed(msg.sender, _amountToMint);
+        emit xUSDCMinted(msg.sender, _amountToMint);
     }
 
     /// @notice This function allows user to deposit collateral and automatically mint the maximum  amount of xUSDC
@@ -183,7 +183,7 @@ contract BorrowX is ReentrancyGuard {
         bool success = i_xusdc.transferFrom(_xUSDCfrom, address(this), _amountToBurn);
         if (!success) revert BorrowX__TransferFailed();
         i_xusdc.burn(_amountToBurn);
-        emit Repayed(_xUSDCfrom, _beneficiary, _amountToBurn);
+        emit xUSDCBurnt(_xUSDCfrom, _beneficiary, _amountToBurn);
     }
 
     /// @notice The function is used to deposit collateral;

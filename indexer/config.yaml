@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+name: envio-indexer
+networks:
+- id: 84532
+  start_block: 0
+  contracts:
+  - name: BorrowX
+    address:
+    - 0x4bB6C572Bed1A41049Fd9274C329A0F49A367050
+    handler: src/EventHandlers.ts
+    events:
+    - event: CollateralDeposited(address indexed user, uint256 amount)
+    - event: CollateralRedeemed(address indexed redeemFrom, address indexed redeemTo, uint256 amount)
+    - event: xUSDCBurnt(address indexed from, address indexed onBehalfOf, uint256 amount)
+    - event: xUSDCMinted(address indexed user, uint256 amount)
+unordered_multichain_mode: true

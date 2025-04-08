@@ -1,0 +1,33 @@
+type BorrowX_CollateralDeposited {
+  id: ID!
+  user: String!
+  amount: BigInt!
+}
+
+type BorrowX_CollateralRedeemed {
+  id: ID!
+  redeemFrom: String!
+  redeemTo: String!
+  amount: BigInt!
+}
+
+type BorrowX_xUSDCBurnt {
+  id: ID!
+  from: String!
+  onBehalfOf: String!
+  amount: BigInt!
+}
+
+type BorrowX_xUSDCMinted {
+  id: ID!
+  user: String!
+  amount: BigInt!
+}
+
+type Position {
+  id: ID!;
+  account: String!;
+  amount: BigInt!;
+  timestamp: BigInt!;
+  txHash: Bytes!;
+}
