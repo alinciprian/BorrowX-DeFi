@@ -17,10 +17,10 @@ export default function Navbar({ isLoading }: { isLoading: boolean }) {
           Dashboard
         </a>
         <a href="#" className="hover:text-gray-300">
-          Manage Borrows
+          Liquidations
         </a>
         <a href="#" className="hover:text-gray-300">
-          Liquidations
+          Staking
         </a>
       </div>
 
