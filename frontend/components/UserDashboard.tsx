@@ -175,8 +175,42 @@ export default function Dashboard({
       fetchUserCollateralDeposited(address!),
       fetchUserWithdrawalAllowance(address!),
       fetchUsdValueOfUserCollateral(address!),
+      fetchUserPosition(),
     ]);
     setIsLoading(false);
+  };
+
+  const fetchUserPosition = async () => {
+    const endpoint = "http://localhost:8080/v1/graphql";
+    const headers = {
+      "content-type": "application/json",
+    };
+    const graphqlQuery = {
+      query: `query UserPosition($account: String!) {
+        Position(where: {account: {_eq: $account}}) {
+          id
+          borrowed
+          collateral
+          account
+          timestamp
+          txHash
+        }
+      }`,
+      variables: { account: address },
+    };
+
+    const options = {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(graphqlQuery),
+    };
+
+    const response = await fetch(endpoint, options);
+    const data = await response.json();
+
+    const position = data.data.Position[0];
+    console.log(position); // data
+    console.log(data.errors); //
   };
 
   useEffect(() => {

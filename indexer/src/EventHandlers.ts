@@ -1,23 +1,12 @@
-/*
+/* /*
  * Please refer to https://docs.envio.dev for a thorough guide on all Envio indexer features
  */
 import {
   BorrowX,
-  BorrowX_CollateralDeposited,
   BorrowX_CollateralRedeemed,
   BorrowX_xUSDCBurnt,
   BorrowX_xUSDCMinted,
 } from "generated";
-
-BorrowX.CollateralDeposited.handler(async ({ event, context }) => {
-  const entity: BorrowX_CollateralDeposited = {
-    id: `${event.chainId}_${event.block.number}_${event.logIndex}`,
-    user: event.params.user,
-    amount: event.params.amount,
-  };
-
-  context.BorrowX_CollateralDeposited.set(entity);
-});
 
 BorrowX.CollateralRedeemed.handler(async ({ event, context }) => {
   const entity: BorrowX_CollateralRedeemed = {
@@ -30,7 +19,7 @@ BorrowX.CollateralRedeemed.handler(async ({ event, context }) => {
   context.BorrowX_CollateralRedeemed.set(entity);
 });
 
-BorrowX.xUSDCBurnt.handler(async ({ event, context }) => {
+BorrowX.XUSDCBurnt.handler(async ({ event, context }) => {
   const entity: BorrowX_xUSDCBurnt = {
     id: `${event.chainId}_${event.block.number}_${event.logIndex}`,
     from: event.params.from,
@@ -41,7 +30,7 @@ BorrowX.xUSDCBurnt.handler(async ({ event, context }) => {
   context.BorrowX_xUSDCBurnt.set(entity);
 });
 
-BorrowX.xUSDCMinted.handler(async ({ event, context }) => {
+BorrowX.XUSDCMinted.handler(async ({ event, context }) => {
   const entity: BorrowX_xUSDCMinted = {
     id: `${event.chainId}_${event.block.number}_${event.logIndex}`,
     user: event.params.user,
