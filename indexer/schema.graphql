@@ -25,9 +25,10 @@ type BorrowX_xUSDCMinted {
 }
 
 type Position {
-  id: ID!;
-  account: String!;
-  amount: BigInt!;
-  timestamp: BigInt!;
-  txHash: Bytes!;
+  id: ID!
+  account: String!
+  collateral: BigInt! # ETH
+  borrowed: BigInt! # USDC
+  timestamp: BigInt!
+  txHash: Bytes!
 }
