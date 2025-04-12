@@ -30,7 +30,6 @@ export default function DepositForm({
     register: registerDeposit,
     handleSubmit: handleSubmitDeposit,
     formState: { errors: errorsDeposit },
-    watch,
     setValue,
   } = useForm<DepositSchemaType>({ resolver: zodResolver(DepositSchema) });
 

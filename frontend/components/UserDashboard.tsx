@@ -1,15 +1,7 @@
-import Balance from "../components/Balance";
 import * as React from "react";
 import WithdrawForm from "./WithdrawForm";
 import DepositForm from "./DepositForm";
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useAccount } from "wagmi";
 import { getBalance, readContract } from "@wagmi/core";
 import { wagmiConfig } from "../components/Providers";
@@ -54,7 +46,7 @@ export default function Dashboard({
         address: address!,
         token: xUSDCAddress,
       });
-      console.log(balancexUSDC);
+
       setxusdcBalance(balancexUSDC);
     } catch (error) {
       console.log("Error fetching xUSDC balance:", error);
@@ -144,7 +136,6 @@ export default function Dashboard({
         functionName: "getUsdValueOfUserCollateral",
         args: [address],
       });
-      console.log(result);
       setUsdValueOfCollateral({
         formatted: formatUnits(result as bigint, 18),
         symbol: "USD",
@@ -210,7 +201,6 @@ export default function Dashboard({
 
     const position = data.data.Position[0];
     console.log(position); // data
-    console.log(data.errors); //
   };
 
   useEffect(() => {
