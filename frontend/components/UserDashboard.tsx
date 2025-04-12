@@ -177,8 +177,8 @@ export default function Dashboard({
       "content-type": "application/json",
     };
     const graphqlQuery = {
-      query: `query UserPosition($account: String!) {
-        Position(where: {account: {_eq: $account}}) {
+      query: `query UserPosition {
+        Position {
           id
           borrowed
           collateral
@@ -187,7 +187,6 @@ export default function Dashboard({
           txHash
         }
       }`,
-      variables: { account: address },
     };
 
     const options = {
@@ -199,7 +198,7 @@ export default function Dashboard({
     const response = await fetch(endpoint, options);
     const data = await response.json();
 
-    const position = data.data.Position[0];
+    const position = data.data.Position;
     console.log(position); // data
   };
 
