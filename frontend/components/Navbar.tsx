@@ -1,4 +1,5 @@
 import { useAccount, useDisconnect } from "wagmi";
+import Link from "next/link";
 
 export default function Navbar({ isLoading }: { isLoading: boolean }) {
   const { disconnect } = useDisconnect();
@@ -13,9 +14,9 @@ export default function Navbar({ isLoading }: { isLoading: boolean }) {
       <div className="flex items-center space-x-6">
         {/* Logo */}
 
-        <a href="#" className="hover:text-gray-300">
+        <Link href="/dashboard" className="hover:text-gray-300">
           Dashboard
-        </a>
+        </Link>
         <a href="#" className="hover:text-gray-300">
           Liquidations
         </a>
