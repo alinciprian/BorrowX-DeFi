@@ -3,6 +3,7 @@
 import Navbar from "@/components/Navbar";
 import LoginPage from "../components/LoginPage";
 import UserDasboard from "../components/UserDashboard";
+import Liquidations from "../components/Liquidations";
 import { useAccount } from "wagmi";
 import { useState } from "react";
 
@@ -15,7 +16,8 @@ export default function Home() {
       {isConnected ? (
         <div>
           <Navbar isLoading={isLoading} />{" "}
-          <UserDasboard isLoading={isLoading} setIsLoading={setIsLoading} />{" "}
+          {/* <UserDasboard isLoading={isLoading} setIsLoading={setIsLoading} />{" "} */}
+          <Liquidations isLoading={isLoading} setIsLoading={setIsLoading} />
         </div>
       ) : (
         <LoginPage />
