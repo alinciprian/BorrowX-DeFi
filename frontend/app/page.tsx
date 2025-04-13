@@ -1,13 +1,13 @@
 "use client";
 
-import Navbar from "@/components/Navbar";
-import LoginPage from "../../components/LoginPage";
-import UserDasboard from "../../components/UserDashboard";
-import Liquidations from "../liquidations/page";
+import Navbar from "../components/Navbar";
+import LoginPage from "../components/LoginPage";
+import UserDasboard from "../components/UserDashboard";
+
 import { useAccount } from "wagmi";
 import { useState } from "react";
 
-export default function Home() {
+export default function Dashboard() {
   const { isConnected } = useAccount();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -17,7 +17,6 @@ export default function Home() {
         <div>
           <Navbar isLoading={isLoading} />{" "}
           <UserDasboard isLoading={isLoading} setIsLoading={setIsLoading} />{" "}
-          {/* <Liquidations isLoading={isLoading} setIsLoading={setIsLoading} /> */}
         </div>
       ) : (
         <LoginPage />

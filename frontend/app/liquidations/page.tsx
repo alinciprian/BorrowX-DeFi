@@ -1,5 +1,4 @@
 "use client";
-
 import * as React from "react";
 import WithdrawForm from "../../components/WithdrawForm";
 import DepositForm from "../../components/DepositForm";

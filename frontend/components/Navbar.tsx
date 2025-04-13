@@ -14,7 +14,7 @@ export default function Navbar({ isLoading }: { isLoading: boolean }) {
       <div className="flex items-center space-x-6">
         {/* Logo */}
 
-        <Link href="/dashboard" className="hover:text-gray-300">
+        <Link href="/" className="hover:text-gray-300">
           Dashboard
         </Link>
         <Link href="/liquidations" className="hover:text-gray-300">
