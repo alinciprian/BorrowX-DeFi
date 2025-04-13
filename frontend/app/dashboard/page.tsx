@@ -1,9 +1,9 @@
 "use client";
 
 import Navbar from "@/components/Navbar";
-import LoginPage from "../components/LoginPage";
-import UserDasboard from "./UserDashboard";
-import Liquidations from "./Liquidations";
+import LoginPage from "../../components/LoginPage";
+import UserDasboard from "../../components/UserDashboard";
+import Liquidations from "../liquidations/page";
 import { useAccount } from "wagmi";
 import { useState } from "react";
 

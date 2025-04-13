@@ -17,9 +17,9 @@ export default function Navbar({ isLoading }: { isLoading: boolean }) {
         <Link href="/dashboard" className="hover:text-gray-300">
           Dashboard
         </Link>
-        <a href="#" className="hover:text-gray-300">
+        <Link href="/liquidations" className="hover:text-gray-300">
           Liquidations
-        </a>
+        </Link>
         <a href="#" className="hover:text-gray-300">
           Staking
         </a>

@@ -1,19 +1,19 @@
 import * as React from "react";
-import WithdrawForm from "../components/WithdrawForm";
-import DepositForm from "../components/DepositForm";
+import WithdrawForm from "./WithdrawForm";
+import DepositForm from "./DepositForm";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useAccount } from "wagmi";
 import { getBalance, readContract } from "@wagmi/core";
-import { wagmiConfig } from "../components/Providers";
+import { wagmiConfig } from "./Providers";
 import { useState, useEffect } from "react";
 import { BorrowXABI } from "../config/BorrowXABI";
 import { BorrowXAddress } from "@/lib/constants";
 import { xUSDCAddress } from "@/lib/constants";
 import { formatUnits, parseUnits } from "viem";
-import BorrowForm from "../components/BorrowForm";
+import BorrowForm from "./BorrowForm";
 import { BalanceType } from "@/lib/utils";
-import UserStats from "../components/UserStats";
-import PayDebt from "../components/PayDebt";
+import UserStats from "./UserStats";
+import PayDebt from "./PayDebt";
 
 export default function Dashboard({
   isLoading,
@@ -219,25 +219,58 @@ export default function Dashboard({
   // The value of collateral + balance of xUSDC - debt
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black">
-      {/* Center the grid container */}
-      <div className="relative">
-        {/* Absolute positioning removed from the inner content, and centralized */}
-        <div className="absolute -top-10 left-0 text-[10px] font-semibold">
-          <p className="text-gray-400">Net worth:</p>
-          <div className="flex items-center text-white">
-            <p className="text-gray-400">$ </p>
-            <p> {netWorth?.formatted}</p>
+    <div>
+      <div className="flex flex-col items-center justify-center h-screen bg-black text-white relative">
+        <div className="grid grid-cols-2 gap-2 scale-150 relative">
+          <div className="absolute -top-15 left-2 text-[10px] font-semibold">
+            <p className="text-gray-400">Net worth:</p>
+            <div className="flex items-center text-white">
+              <p className="text-gray-400">$ </p>
+              <p> {netWorth?.formatted}</p>
+            </div>
           </div>
-        </div>
 
-        {/* Centered card */}
-        <Card className="w-[400px] bg-gray-800 text-white">
-          <CardHeader>
-            <CardTitle>Your stats</CardTitle>
-          </CardHeader>
-          <CardContent></CardContent>
-        </Card>
+          <Card className="w-[400px] bg-gray-800 text-white">
+            <CardHeader>
+              <CardTitle>Your stats</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <UserStats collateral={collateral} xusdcBalance={xusdcBalance} />
+              <WithdrawForm
+                setIsLoading={setIsLoading}
+                isLoading={isLoading}
+                onfetchUserData={fetchUserData}
+                withdrawAllowance={withdrawAllowance}
+                borrowed={borrowed}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="w-[400px] bg-gray-800 text-white">
+            <CardHeader>
+              <CardTitle> Manage borrows </CardTitle>
+            </CardHeader>
+            <CardContent className="text-[10px] text-gray-400">
+              <DepositForm
+                setIsLoading={setIsLoading}
+                isLoading={isLoading}
+                onfetchUserData={fetchUserData}
+              />
+              <BorrowForm
+                setIsLoading={setIsLoading}
+                isLoading={isLoading}
+                onfetchUserData={fetchUserData}
+                borrowAllowance={borrowAllowance}
+              />
+              <PayDebt
+                setIsLoading={setIsLoading}
+                isLoading={isLoading}
+                onfetchUserData={fetchUserData}
+                borrowed={borrowed}
+              />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
