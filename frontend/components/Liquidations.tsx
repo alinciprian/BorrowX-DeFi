@@ -1,7 +1,11 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useEffect } from "react";
+import { useAccount } from "wagmi";
 
 export default function Liquidations() {
-  const fetchUserPosition = async () => {
+  const { isConnected } = useAccount();
+
+  const fetchPositions = async () => {
     const endpoint = "http://localhost:8080/v1/graphql";
     const headers = {
       "content-type": "application/json",
@@ -31,6 +35,13 @@ export default function Liquidations() {
     const position = data.data.Position;
     console.log(position); // data
   };
+
+  useEffect(() => {
+    if (isConnected) {
+      fetchPositions();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-black text-white relative">
