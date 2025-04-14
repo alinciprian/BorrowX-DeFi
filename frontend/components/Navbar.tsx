@@ -1,7 +1,7 @@
 import { useAccount, useDisconnect } from "wagmi";
 import Link from "next/link";
 
-export default function Navbar({ isLoading }: { isLoading: boolean }) {
+export default function Navbar() {
   const { disconnect } = useDisconnect();
   const { address } = useAccount();
 
@@ -29,13 +29,8 @@ export default function Navbar({ isLoading }: { isLoading: boolean }) {
       <div className="flex items-center space-x-4">
         <span className="text-gray-400">{shortenAddress(address!)}</span>
         <button
-          className={
-            isLoading
-              ? "bg-gray-400  text-white px-4 py-2 rounded-lg"
-              : "bg-black hover:bg-red-600 text-white px-4 py-2 rounded-lg"
-          }
+          className="bg-black hover:bg-red-600 text-white px-4 py-2 rounded-lg"
           onClick={() => disconnect()}
-          disabled={isLoading}
         >
           Disconnect
         </button>

@@ -15,7 +15,7 @@ export default function Dashboard() {
     <>
       {isConnected ? (
         <div>
-          <Navbar isLoading={isLoading} />{" "}
+          <Navbar />{" "}
           <UserDasboard isLoading={isLoading} setIsLoading={setIsLoading} />{" "}
         </div>
       ) : (

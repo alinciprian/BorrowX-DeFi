@@ -10,11 +10,12 @@ export default function Dashboard() {
   const { isConnected } = useAccount();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
   return (
     <>
       {isConnected ? (
         <div>
-          <Navbar isLoading={isLoading} /> <p>This is the liquidation page</p>
+          <Navbar /> <p>This is the liquidation page</p>
         </div>
       ) : (
         <LoginPage />
