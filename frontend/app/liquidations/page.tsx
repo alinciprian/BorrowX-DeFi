@@ -16,7 +16,7 @@ export default function Dashboard() {
     <>
       {isConnected ? (
         <div>
-          <Navbar /> <Liquidations />
+          <Navbar /> <Liquidations  />
         </div>
       ) : (
         <LoginPage />
