@@ -1,13 +1,10 @@
 import { useAccount, useDisconnect } from "wagmi";
 import Link from "next/link";
+import { shortenAddress } from "@/lib/utils";
 
 export default function Navbar() {
   const { disconnect } = useDisconnect();
   const { address } = useAccount();
-
-  function shortenAddress(address: `0x${string}`) {
-    return `${address.slice(0, 4)}...${address.slice(-4)}`;
-  }
 
   return (
     <nav className="bg-gray-800 text-white p-4 flex justify-between items-center">
