@@ -2,6 +2,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { shortenAddress } from "@/lib/utils";
+import { formatUnits } from "viem";
+import { Button } from "./ui/button";
 
 export default function Liquidations() {
   type Position = {
@@ -55,23 +57,56 @@ export default function Liquidations() {
   }, [isConnected]);
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-black text-white relative">
-      {/* <div className="absolute -top-15 left-2 text-[10px] font-semibold">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
+      {/* Uncomment if you want to show net worth */}
+      {/* <div className="absolute top-4 left-4 text-[10px] font-semibold">
         <p className="text-gray-400">Net worth:</p>
         <div className="flex items-center text-white">
-          <p className="text-gray-400">$ </p>
-          <p> {netWorth?.formatted}</p>
+          <p className="text-gray-400">$</p>
+          <p>{netWorth?.formatted}</p>
         </div>
       </div> */}
 
-      <Card className="w-[400px] bg-gray-800 text-white">
+      <Card className="w-full max-w-md bg-gray-800 text-white shadow-lg rounded-2xl">
         <CardHeader>
-          <CardTitle>Liquidations</CardTitle>
+          <CardTitle className="text-xl">Liquidations</CardTitle>
         </CardHeader>
-        <CardContent>
-          {positions.map((position) => (
-            <p>{position.account}</p>
-          ))}
+        <CardContent className="space-y-4">
+          {positions.length === 0 ? (
+            <p className="text-gray-400 text-center">
+              No active liquidation positions.
+            </p>
+          ) : (
+            positions.map((position, index) => (
+              <div
+                key={index}
+                className="border border-gray-700 rounded-xl p-4 bg-gray-900 hover:bg-gray-800 transition-all"
+              >
+                <div className="mb-2">
+                  <p className="text-sm text-gray-400">Account</p>
+                  <p className="font-mono">
+                    {shortenAddress(position.account)}
+                  </p>
+                </div>
+
+                <div className="mb-2">
+                  <p className="text-sm text-gray-400">Borrowed</p>
+                  <p className="font-semibold">
+                    {formatUnits(BigInt(position.borrowed), 18)} xUSDC
+                  </p>
+                </div>
+
+                {/* Add more info if you want, like collateral, health factor, etc. */}
+
+                <Button
+                  variant="outline"
+                  className="mt-2 w-full text-white border-white bg-green-600 hover:bg-green-700"
+                >
+                  Check
+                </Button>
+              </div>
+            ))
+          )}
         </CardContent>
       </Card>
     </div>
