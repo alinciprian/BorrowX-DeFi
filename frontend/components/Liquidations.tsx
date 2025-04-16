@@ -4,8 +4,14 @@ import { useAccount } from "wagmi";
 import { shortenAddress } from "@/lib/utils";
 import { formatUnits } from "viem";
 import { Button } from "./ui/button";
+import { BorrowXABI } from "@/config/BorrowXABI";
+import { BorrowXAddress } from "@/lib/constants";
+import { readContract } from "@wagmi/core";
+import { wagmiConfig } from "./Providers";
 
 export default function Liquidations() {
+  const [liquidationMap, setLiquidationMap] = useState<boolean[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   type Position = {
     account: string;
     borrowed: string;
@@ -48,6 +54,47 @@ export default function Liquidations() {
     console.log(position); // data
     setPositions(position);
   };
+
+  /// This function is used to check wether a user is eligible for liquidation
+  async function handleLiquidation(account: string, index: number) {
+    try {
+      const result: boolean = (await readContract(wagmiConfig, {
+        abi: BorrowXABI,
+        address: BorrowXAddress,
+        functionName: "getLiquidationStatus",
+        args: [account],
+      })) as boolean;
+      console.log(result);
+      setLiquidationMap((prev) => {
+        const updated = [...prev];
+        updated[index] = result;
+        return updated;
+      });
+
+      if (result) {
+        async function liquidate(account: string) {
+          try {
+            setIsLoading(true);
+            const txHash = await writeContract(wagmiConfig, {
+              abi: BorrowXABI,
+              address: BorrowXAddress,
+              functionName: "mintxUSDC",
+              args: [parseUnits(amountDeposit.toString(), 18)],
+            });
+            await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
+            onfetchUserData();
+            setValue("amountDeposit", 0);
+            setIsLoading(false);
+          } catch (error) {
+            console.log(error);
+            setIsLoading(false);
+          }
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   useEffect(() => {
     if (isConnected) {
@@ -101,8 +148,9 @@ export default function Liquidations() {
                 <Button
                   variant="outline"
                   className="mt-2 w-full text-white border-white bg-green-600 hover:bg-green-700"
+                  onClick={() => handleLiquidation(position.account, index)}
                 >
-                  Check
+                  {liquidationMap[index] ? "Liquidate" : "Check"}
                 </Button>
               </div>
             ))
