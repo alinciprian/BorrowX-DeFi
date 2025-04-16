@@ -6,7 +6,11 @@ import { formatUnits } from "viem";
 import { Button } from "./ui/button";
 import { BorrowXABI } from "@/config/BorrowXABI";
 import { BorrowXAddress } from "@/lib/constants";
-import { readContract } from "@wagmi/core";
+import {
+  readContract,
+  writeContract,
+  waitForTransactionReceipt,
+} from "@wagmi/core";
 import { wagmiConfig } from "./Providers";
 
 export default function Liquidations() {
@@ -72,23 +76,19 @@ export default function Liquidations() {
       });
 
       if (result) {
-        async function liquidate(account: string) {
-          try {
-            setIsLoading(true);
-            const txHash = await writeContract(wagmiConfig, {
-              abi: BorrowXABI,
-              address: BorrowXAddress,
-              functionName: "mintxUSDC",
-              args: [parseUnits(amountDeposit.toString(), 18)],
-            });
-            await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
-            onfetchUserData();
-            setValue("amountDeposit", 0);
-            setIsLoading(false);
-          } catch (error) {
-            console.log(error);
-            setIsLoading(false);
-          }
+        try {
+          setIsLoading(true);
+          const txHash = await writeContract(wagmiConfig, {
+            abi: BorrowXABI,
+            address: BorrowXAddress,
+            functionName: "mintxUSDC",
+            args: [account],
+          });
+          await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
+          setIsLoading(false);
+        } catch (error) {
+          console.log(error);
+          setIsLoading(false);
         }
       }
     } catch (error) {
@@ -146,6 +146,7 @@ export default function Liquidations() {
                 {/* Add more info if you want, like collateral, health factor, etc. */}
 
                 <Button
+                  disabled={isLoading}
                   variant="outline"
                   className="mt-2 w-full text-white border-white bg-green-600 hover:bg-green-700"
                   onClick={() => handleLiquidation(position.account, index)}
