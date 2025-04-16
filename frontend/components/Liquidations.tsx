@@ -1,9 +1,19 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
+import { shortenAddress } from "@/lib/utils";
 
 export default function Liquidations() {
+  type Position = {
+    account: string;
+    borrowed: string;
+    collateral: string;
+    id: string;
+    timestamp: string;
+    txHash: string;
+  };
   const { isConnected } = useAccount();
+  const [positions, setPositions] = useState<Position[]>([]);
 
   const fetchPositions = async () => {
     const endpoint = "http://localhost:8080/v1/graphql";
@@ -34,6 +44,7 @@ export default function Liquidations() {
 
     const position = data.data.Position;
     console.log(position); // data
+    setPositions(position);
   };
 
   useEffect(() => {
@@ -57,7 +68,11 @@ export default function Liquidations() {
         <CardHeader>
           <CardTitle>Liquidations</CardTitle>
         </CardHeader>
-        <CardContent></CardContent>
+        <CardContent>
+          {positions.map((position) => (
+            <p>{position.account}</p>
+          ))}
+        </CardContent>
       </Card>
     </div>
   );

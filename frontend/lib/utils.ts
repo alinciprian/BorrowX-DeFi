@@ -9,3 +9,7 @@ export type BalanceType = {
   formatted: string;
   symbol: string;
 };
+
+export function shortenAddress(address: `0x${string}`) {
+  return `${address.slice(0, 4)}...${address.slice(-4)}`;
+}
