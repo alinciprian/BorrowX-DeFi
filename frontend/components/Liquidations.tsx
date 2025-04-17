@@ -81,7 +81,7 @@ export default function Liquidations() {
           const txHash = await writeContract(wagmiConfig, {
             abi: BorrowXABI,
             address: BorrowXAddress,
-            functionName: "mintxUSDC",
+            functionName: "liquidate",
             args: [account],
           });
           await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
