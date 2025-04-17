@@ -59,8 +59,30 @@ export default function Liquidations() {
     setPositions(position);
   };
 
-  /// This function is used to check wether a user is eligible for liquidation
   async function handleLiquidation(account: string, index: number) {
+    try {
+      setIsLoading(true);
+      const txHash = await writeContract(wagmiConfig, {
+        abi: BorrowXABI,
+        address: BorrowXAddress,
+        functionName: "liquidate",
+        args: [account],
+      });
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
+      setLiquidationMap((prev) => {
+        const updated = [...prev];
+        updated[index] = false;
+        return updated;
+      });
+      setIsLoading(false);
+    } catch (error) {
+      console.log(error);
+      setIsLoading(false);
+    }
+  }
+
+  /// This function is used to check wether a user is eligible for liquidation
+  async function handleCheckStatus(account: string, index: number) {
     try {
       const result: boolean = (await readContract(wagmiConfig, {
         abi: BorrowXABI,
@@ -74,23 +96,6 @@ export default function Liquidations() {
         updated[index] = result;
         return updated;
       });
-
-      if (result) {
-        try {
-          setIsLoading(true);
-          const txHash = await writeContract(wagmiConfig, {
-            abi: BorrowXABI,
-            address: BorrowXAddress,
-            functionName: "liquidate",
-            args: [account],
-          });
-          await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
-          setIsLoading(false);
-        } catch (error) {
-          console.log(error);
-          setIsLoading(false);
-        }
-      }
     } catch (error) {
       console.log(error);
     }
@@ -149,7 +154,11 @@ export default function Liquidations() {
                   disabled={isLoading}
                   variant="outline"
                   className="mt-2 w-full text-white border-white bg-green-600 hover:bg-green-700"
-                  onClick={() => handleLiquidation(position.account, index)}
+                  onClick={
+                    liquidationMap[index]
+                      ? () => handleLiquidation(position.account, index)
+                      : () => handleCheckStatus(position.account, index)
+                  }
                 >
                   {liquidationMap[index] ? "Liquidate" : "Check"}
                 </Button>
