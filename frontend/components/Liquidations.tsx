@@ -12,6 +12,7 @@ import {
   waitForTransactionReceipt,
 } from "@wagmi/core";
 import { wagmiConfig } from "./Providers";
+import { toast } from "react-hot-toast";
 
 export default function Liquidations() {
   const [liquidationMap, setLiquidationMap] = useState<boolean[]>([]);
@@ -96,6 +97,7 @@ export default function Liquidations() {
         updated[index] = result;
         return updated;
       });
+      toast.error("User not eligible for liquidation !");
     } catch (error) {
       console.log(error);
     }
