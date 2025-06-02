@@ -1,3 +1,1 @@
-Smart contracts ready
 
-Front end development in progress...
