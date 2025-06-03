@@ -45,11 +45,3 @@ BorrowX enables users to:
 - **Custom Errors**: Gas-efficient error handling for invalid actions.
 
 ---
-
-## 🚀 How It Works
-
-### 1️⃣ Deposit ETH
-
-```solidity
-borrowX.depositCollateral{value: 1 ether}();
-```
